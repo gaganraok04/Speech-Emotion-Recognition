@@ -1,48 +1,72 @@
 1
-00:00:00,000 --> 00:00:05,634
-Can an AI detect your true emotion just from the tone of your voice? Most
+00:00:00,200 --> 00:00:03,700
+Can an AI detect your true emotion just from the tone of your voice?
 
 2
-00:00:05,634 --> 00:00:11,269
-speech models cheat by memorizing speaker voices. Here is how we solved it with PyTorch.
+00:00:04,099 --> 00:00:07,599
+Most speech models cheat by memorizing speaker voices.
 
 3
-00:00:11,269 --> 00:00:17,035
-If you split speech data at random, your accuracy is fiction. We enforced
+00:00:08,000 --> 00:00:10,300
+Here is how we solved it with PyTorch.
 
 4
-00:00:17,035 --> 00:00:22,799
-a strict speaker-independent split on twenty-four actors, testing only on completely unseen voices.
+00:00:11,070 --> 00:00:14,519
+If you split speech data at random, your accuracy is fiction.
 
 5
-00:00:22,799 --> 00:00:28,904
-We engineered a 280-dimensional acoustic feature vector capturing 40 MFCC bands, pitch
+00:00:14,919 --> 00:00:18,519
+We enforced a strict speaker-independent split on twenty-four actors,
 
 6
-00:00:28,904 --> 00:00:35,009
-velocity, and spectral contrast, trained with a deep 1D Convolutional Neural Network.
+00:00:18,719 --> 00:00:21,519
+testing only on completely unseen voices.
 
 7
-00:00:35,009 --> 00:00:40,140
-Here is the live project! Featuring live three-second microphone recording
+00:00:22,250 --> 00:00:27,700
+We engineered a 280-dimensional acoustic feature vector,
 
 8
-00:00:40,140 --> 00:00:45,269
-with animated waveforms, instant emotion prediction, and a recordings history deck.
+00:00:27,800 --> 00:00:30,200
+capturing 40 MFCC bands, pitch velocity, and spectral contrast,
 
 9
-00:00:45,269 --> 00:00:50,254
-We delivered honest benchmark metrics. High arousal overlaps between anger
+00:00:30,300 --> 00:00:33,299
+trained with a deep 1D Convolutional Neural Network.
 
 10
-00:00:50,254 --> 00:00:55,239
-and joy, while subtle sadness shares acoustic prosody with calm speech.
+00:00:34,160 --> 00:00:35,759
+Here is the live project!
 
 11
-00:00:55,239 --> 00:01:00,764
-Thank you for watching! The project is open source on GitHub and live
+00:00:36,160 --> 00:00:39,859
+Featuring live three-second microphone recording with animated waveforms,
 
 12
-00:01:00,764 --> 00:01:06,289
-on GitHub Pages. Star the repository, test your voice, and let's connect on LinkedIn!
+00:00:39,960 --> 00:00:43,260
+instant emotion prediction, and a recordings history deck.
+
+13
+00:00:44,020 --> 00:00:46,370
+We delivered honest benchmark metrics.
+
+14
+00:00:46,770 --> 00:00:49,470
+High arousal overlaps between anger and joy,
+
+15
+00:00:49,570 --> 00:00:52,970
+while subtle sadness shares acoustic prosody with calm speech.
+
+16
+00:00:53,640 --> 00:00:55,090
+Thank you for watching!
+
+17
+00:00:55,289 --> 00:00:59,090
+The project is open source on GitHub and live on GitHub Pages.
+
+18
+00:00:59,490 --> 00:01:03,689
+Star the repository, test your voice, and let's connect on LinkedIn!
 
