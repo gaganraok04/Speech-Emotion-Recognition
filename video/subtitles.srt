@@ -1,0 +1,48 @@
+1
+00:00:00,000 --> 00:00:05,634
+Can an AI detect your true emotion just from the tone of your voice? Most
+
+2
+00:00:05,634 --> 00:00:11,269
+speech models cheat by memorizing speaker voices. Here is how we solved it with PyTorch.
+
+3
+00:00:11,269 --> 00:00:17,035
+If you split speech data at random, your accuracy is fiction. We enforced
+
+4
+00:00:17,035 --> 00:00:22,799
+a strict speaker-independent split on twenty-four actors, testing only on completely unseen voices.
+
+5
+00:00:22,799 --> 00:00:28,904
+We engineered a 280-dimensional acoustic feature vector capturing 40 MFCC bands, pitch
+
+6
+00:00:28,904 --> 00:00:35,009
+velocity, and spectral contrast, trained with a deep 1D Convolutional Neural Network.
+
+7
+00:00:35,009 --> 00:00:40,140
+Here is the live project! Featuring live three-second microphone recording
+
+8
+00:00:40,140 --> 00:00:45,269
+with animated waveforms, instant emotion prediction, and a recordings history deck.
+
+9
+00:00:45,269 --> 00:00:50,254
+We delivered honest benchmark metrics. High arousal overlaps between anger
+
+10
+00:00:50,254 --> 00:00:55,239
+and joy, while subtle sadness shares acoustic prosody with calm speech.
+
+11
+00:00:55,239 --> 00:01:00,764
+Thank you for watching! The project is open source on GitHub and live
+
+12
+00:01:00,764 --> 00:01:06,289
+on GitHub Pages. Star the repository, test your voice, and let's connect on LinkedIn!
+
