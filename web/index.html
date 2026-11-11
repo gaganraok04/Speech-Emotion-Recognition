@@ -16,14 +16,24 @@
   <nav class="navbar">
     <div class="container nav-content">
       <a href="#" class="brand-logo">
-        <div class="brand-icon">🎙️</div>
+        <div class="brand-icon">
+          <svg class="svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+        </div>
         <span>SER<span style="color: var(--accent-primary);">.Audio</span></span>
       </a>
 
       <div class="nav-actions">
         <!-- Theme Toggle Button -->
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Light/Dark Theme">
-          <span id="theme-icon">🌙</span>
+          <span id="theme-icon">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          </span>
           <span id="theme-text">Dark Brown</span>
         </button>
       </div>
@@ -71,7 +81,14 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <span class="icon">🎛️</span>
+            <span class="icon">
+              <svg class="svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/>
+                <line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/>
+                <line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/>
+                <line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/>
+              </svg>
+            </span>
             <span>Live Audio Emotion Analyzer</span>
           </div>
           <span style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">PyTorch CNN-1D</span>
@@ -91,11 +108,17 @@
 
           <div class="action-row">
             <label class="btn btn-outline" style="cursor: pointer;">
-              📁 Upload Audio
+              <svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" x2="12" y1="3" y2="15"/>
+              </svg>
+              <span>Upload Audio</span>
               <input type="file" id="file-input" accept="audio/*" style="display: none;">
             </label>
             <button class="btn btn-outline btn-record" id="record-btn">
-              🔴 Record Mic (3s)
+              <span class="rec-dot"></span>
+              <span>Record Mic (3s)</span>
             </button>
           </div>
 
@@ -114,13 +137,29 @@
             </div>
           </div>
 
-          <!-- Active Audio Track Display -->
+          <!-- Enhanced Active Audio Track Display (Requirement 5) -->
           <div id="active-track-banner" class="active-track-banner" style="display: none;">
-            <div class="track-details">
-              <span style="font-size: 1.1rem;">🎵</span>
-              <span id="active-track-name" class="track-title">Sample Loaded</span>
+            <div class="active-track-header">
+              <div class="track-details">
+                <svg class="svg-icon track-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+                <div>
+                  <div id="active-track-name" class="track-title">Sample Loaded</div>
+                  <div class="track-meta-sub">
+                    <span id="active-track-duration">3.00s</span>
+                    <span class="meta-sep">•</span>
+                    <span id="active-track-status-pill" class="status-pill status-ready">Ready</span>
+                  </div>
+                </div>
+              </div>
+              <div class="track-badges-row">
+                <span id="active-track-emotion" class="active-emotion-label">--</span>
+                <span id="active-track-badge" class="tag-badge tag-arousal-low">Loaded</span>
+              </div>
             </div>
-            <span id="active-track-badge" class="tag-badge tag-arousal-low">Loaded</span>
           </div>
 
           <!-- Waveform Canvas Box -->
@@ -134,12 +173,32 @@
             <span id="playback-status" style="font-size: 0.75rem; text-transform: uppercase;">Idle</span>
           </div>
 
-          <!-- Controls Toolbar: Play, Pause, Stop, Delete -->
+          <!-- Controls Toolbar: Play, Pause, Stop, Delete with Clean SVGs -->
           <div class="controls-toolbar">
-            <button class="btn btn-primary" id="play-btn">▶ Play</button>
-            <button class="btn btn-outline" id="pause-btn">⏸ Pause</button>
-            <button class="btn btn-outline" id="stop-btn">⏹ Stop</button>
-            <button class="btn btn-danger" id="delete-btn" title="Delete current audio">🗑️ Delete</button>
+            <button class="btn btn-primary" id="play-btn">
+              <svg class="svg-icon" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3"/>
+              </svg>
+              <span>Play</span>
+            </button>
+            <button class="btn btn-outline" id="pause-btn">
+              <svg class="svg-icon" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              <span>Pause</span>
+            </button>
+            <button class="btn btn-outline" id="stop-btn">
+              <svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <rect x="4" y="4" width="16" height="16"/>
+              </svg>
+              <span>Stop</span>
+            </button>
+            <button class="btn btn-danger" id="delete-btn" title="Delete current audio">
+              <svg class="svg-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+              </svg>
+              <span>Delete</span>
+            </button>
           </div>
 
           <!-- Prediction Result Deck -->
@@ -165,7 +224,10 @@
           <div class="history-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
               <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
-                <span>📜</span> Recordings History
+                <svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Recordings History</span>
               </span>
               <button id="clear-history-btn" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">Clear All</button>
             </div>
@@ -180,7 +242,11 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <span class="icon">📊</span>
+            <span class="icon">
+              <svg class="svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>
+              </svg>
+            </span>
             <span>Per-Class Performance</span>
           </div>
           <span style="font-size: 0.75rem; color: var(--text-dim);">Unseen Speakers</span>
@@ -213,7 +279,11 @@
     <div class="card" style="margin-bottom: clamp(1.5rem, 4vw, 2.5rem);">
       <div class="card-header">
         <div class="card-title">
-          <span class="icon">🔍</span>
+          <span class="icon">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/>
+            </svg>
+          </span>
           <span>Confusion Matrix &amp; Acoustic Error Analysis</span>
         </div>
         <span style="font-size: 0.75rem; color: var(--text-dim);">Click any cell</span>
@@ -238,7 +308,11 @@
       <!-- Card: Why Speaker-Independent Split Matters -->
       <div class="card">
         <div class="card-title">
-          <span class="icon">🛡️</span>
+          <span class="icon">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </span>
           <span>Why Speaker-Independent Split is Critical</span>
         </div>
 
@@ -263,7 +337,11 @@
       <!-- Card: Feature Extraction Architecture -->
       <div class="card">
         <div class="card-title">
-          <span class="icon">🔬</span>
+          <span class="icon">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </span>
           <span>280-D Acoustic Feature Pipeline</span>
         </div>
 
@@ -299,7 +377,11 @@
     <div class="card" style="margin-top: clamp(1.5rem, 4vw, 2.5rem);">
       <div class="card-header">
         <div class="card-title">
-          <span class="icon">📈</span>
+          <span class="icon">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/>
+            </svg>
+          </span>
           <span>Acoustic Waveforms &amp; Spectrograms Comparison</span>
         </div>
       </div>

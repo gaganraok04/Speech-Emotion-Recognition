@@ -1,9 +1,10 @@
 """
-LinkedIn 1-Minute Showcase Video Generator for Speech Emotion Recognition.
+Final Polish: LinkedIn 1-Minute Showcase Video Generator for Speech Emotion Recognition.
 
 Features:
-- Professional 1080p (1920x1080) slide design in warm brown espresso palette.
-- Elevated content layout with dedicated lower-third subtitle safe zone (y = 850-1080).
+- Professional 1080p (1920x1080) slide design in warm brown espresso & amber palette.
+- Zero missing glyphs or broken characters (uses standard system fonts and native PIL shapes).
+- Elevated layout architecture with dedicated lower-third subtitle safe zone (y = 850 to 1080).
 - Minimalist, elegant subtitles:
   * Font size: 34 px (clean sans-serif Segoe UI / Arial medium).
   * Color: White (#FFFFFF), line-height 1.2, max-width 72%.
@@ -12,7 +13,12 @@ Features:
   * Position: Safe area 65px from bottom edge (y_bottom = 1015).
   * Natural sentence-based phrasing synchronized with speech pauses.
   * Zero clutter, zero obscuring of technical content.
-- Generates 64.2-second Full HD MP4 at 25 FPS with Aria Neural female voiceover.
+- Closing slide strictly adheres to guidelines:
+  * "Speech Emotion Recognition"
+  * "AI-Powered Speech Emotion Analysis"
+  * "Thank You for Watching!"
+  * Completely removes any fake GitHub URLs or fabricated repositories.
+- Natural female voiceover (en-US-AriaNeural) at exactly ~64 seconds.
 """
 
 import os
@@ -109,13 +115,13 @@ SCENES = [
     },
     {
         "id": "scene_06_thank_you",
-        "title": "Thank You & GitHub Deployment",
+        "title": "Thank You & Professional Closing",
         "audio_file": "scene_06_thank_you.mp3",
-        "duration": 10.70,
+        "duration": 10.34,
         "phrases": [
             {"start": 0.15, "end": 1.60, "text": "Thank you for watching!"},
-            {"start": 1.80, "end": 5.60, "text": "The project is open source on GitHub and live on GitHub Pages."},
-            {"start": 6.00, "end": 10.20, "text": "Star the repository, test your voice, and let's connect on LinkedIn!"}
+            {"start": 1.80, "end": 5.80, "text": "Speech Emotion Recognition delivers deep acoustic intelligence for real-world voice signals."},
+            {"start": 6.10, "end": 9.90, "text": "Connect on LinkedIn to discuss the project!"}
         ]
     }
 ]
@@ -130,25 +136,32 @@ def get_font(path: str, size: int):
 
 def create_base_canvas():
     """
-    Creates base 1920x1080 canvas.
+    Creates base 1920x1080 canvas without broken emojis.
     Leaves the bottom safe zone (y = 850 to 1080) completely clear for subtitles.
     """
     img = Image.new("RGB", (1920, 1080), COLOR_BG)
     draw = ImageDraw.Draw(img)
 
-    # Ambient radial glow
+    # Ambient radial glow in corner
     for r in range(400, 0, -20):
         alpha = int(12 * (1 - r / 400))
         glow_color = (217, 119, 6, alpha)
         draw.ellipse([(100 - r, 80 - r), (100 + r, 80 + r)], fill=glow_color)
 
-    # Top Brand Navbar (Compact & Professional)
-    brand_font = get_font(FONT_BOLD, 24)
-    badge_font = get_font(FONT_BOLD, 16)
-    draw.text((100, 48), "🎙️ SPEECH EMOTION RECOGNITION (SER)", font=brand_font, fill=COLOR_AMBER_BRIGHT)
+    # Brand Navbar (Clean, professional text & geometric badges)
+    brand_font = get_font(FONT_BOLD, 22)
+    badge_font = get_font(FONT_BOLD, 15)
+
+    # Audio signal level graphic
+    draw.rounded_rectangle([(100, 52), (108, 72)], radius=2, fill=COLOR_AMBER_BRIGHT)
+    draw.rounded_rectangle([(112, 46), (120, 72)], radius=2, fill=COLOR_AMBER_BRIGHT)
+    draw.rounded_rectangle([(124, 40), (132, 72)], radius=2, fill=COLOR_AMBER_BRIGHT)
+    draw.rounded_rectangle([(136, 48), (144, 72)], radius=2, fill=COLOR_AMBER_BRIGHT)
+
+    draw.text((158, 48), "SPEECH EMOTION RECOGNITION (SER)", font=brand_font, fill=COLOR_AMBER_BRIGHT)
     
-    draw.rounded_rectangle([(1520, 42), (1820, 80)], radius=19, fill=(34, 27, 21), outline=COLOR_AMBER, width=1)
-    draw.text((1552, 51), "★ 1-MIN SPOTLIGHT", font=badge_font, fill=COLOR_AMBER_BRIGHT)
+    draw.rounded_rectangle([(1520, 42), (1820, 78)], radius=18, fill=(34, 27, 21), outline=COLOR_AMBER, width=1)
+    draw.text((1556, 51), "1-MIN SPOTLIGHT", font=badge_font, fill=COLOR_AMBER_BRIGHT)
 
     return img, draw
 
@@ -158,22 +171,24 @@ def render_slide_welcome(path: Path):
     # Main container box ends at y = 825
     draw.rounded_rectangle([(100, 110), (1820, 825)], radius=20, fill=COLOR_CARD, outline=(60, 46, 36), width=2)
 
-    badge_font = get_font(FONT_BOLD, 18)
+    badge_font = get_font(FONT_BOLD, 17)
     draw.rounded_rectangle([(770, 140), (1150, 182)], radius=21, fill=(50, 36, 26), outline=COLOR_AMBER, width=1)
-    draw.text((805, 151), "🔴 PROJECT SPOTLIGHT", font=badge_font, fill=COLOR_AMBER_BRIGHT)
+    # Red status indicator dot
+    draw.ellipse([(795, 156), (807, 168)], fill=COLOR_RED)
+    draw.text((820, 151), "PROJECT SPOTLIGHT", font=badge_font, fill=COLOR_AMBER_BRIGHT)
 
-    title_font = get_font(FONT_BOLD, 58)
+    title_font = get_font(FONT_BOLD, 56)
     draw.text((140, 215), "Emotion Recognition from Speech", font=title_font, fill=COLOR_TEXT_MAIN)
     
     sub_font = get_font(FONT_REGULAR, 28)
     draw.text((140, 295), "Why Most Speech Emotion Models Fail — And How We Solved It", font=sub_font, fill=COLOR_AMBER_BRIGHT)
 
     pills = [
-        ("🛡️ Zero Speaker Leakage", "Tested strictly on 100% unseen voices"),
-        ("🎛️ 280-D MFCC Features", "Pitch velocity, timbre & energy dynamics"),
-        ("📱 Live Web App & Audio Deck", "Microphone recording & waveform player")
+        ("Zero Speaker Leakage", "Tested strictly on 100% unseen voices"),
+        ("280-D Acoustic Features", "Pitch velocity, timbre & energy dynamics"),
+        ("Interactive Web UI & Audio Deck", "Microphone recording & waveform player")
     ]
-    pill_font_title = get_font(FONT_BOLD, 22)
+    pill_font_title = get_font(FONT_BOLD, 21)
     pill_font_desc = get_font(FONT_REGULAR, 17)
 
     for i, (p_title, p_desc) in enumerate(pills):
@@ -205,30 +220,36 @@ def render_slide_speaker_split(path: Path):
     tag_font = get_font(FONT_REGULAR, 24)
     draw.text((140, 205), "Split by speaker, not at random — otherwise your accuracy is fiction.", font=tag_font, fill=COLOR_AMBER_BRIGHT)
 
-    box_font_h = get_font(FONT_BOLD, 26)
-    box_font_body = get_font(FONT_REGULAR, 20)
+    box_font_h = get_font(FONT_BOLD, 24)
+    box_font_body = get_font(FONT_REGULAR, 19)
 
     # Left: The Trap
     draw.rounded_rectangle([(140, 260), (940, 790)], radius=16, fill=(38, 22, 22), outline=COLOR_RED, width=2)
-    draw.text((175, 295), "❌ The Random Split Trap (Data Leakage)", font=box_font_h, fill=(239, 68, 68))
+    draw.rounded_rectangle([(175, 290), (205, 320)], radius=4, fill=(80, 20, 20), outline=COLOR_RED)
+    draw.text((184, 292), "X", font=get_font(FONT_BOLD, 18), fill=(255, 120, 120))
+    draw.text((220, 294), "The Random Split Trap (Data Leakage)", font=box_font_h, fill=(239, 68, 68))
+    
     draw.text((175, 360), "• Test set contains the SAME speakers heard in training", font=box_font_body, fill=COLOR_TEXT_MAIN)
     draw.text((175, 415), "• Model memorizes actor vocal tract, timbre & pitch range", font=box_font_body, fill=COLOR_TEXT_MUTED)
     draw.text((175, 470), "• Reports inflated '90-95%' test accuracy in papers", font=box_font_body, fill=COLOR_TEXT_MUTED)
     draw.text((175, 525), "• Completely fails when tested on any new human voice", font=box_font_body, fill=(239, 68, 68))
     
     draw.rounded_rectangle([(175, 665), (905, 745)], radius=12, fill=(60, 20, 20))
-    draw.text((205, 690), "FICTITIOUS RESULT: Overfitting to Speaker Identity", font=get_font(FONT_BOLD, 20), fill=(255, 120, 120))
+    draw.text((205, 690), "FICTITIOUS RESULT: Overfitting to Speaker Identity", font=get_font(FONT_BOLD, 19), fill=(255, 120, 120))
 
     # Right: Our Approach
     draw.rounded_rectangle([(980, 260), (1780, 790)], radius=16, fill=(24, 34, 24), outline=COLOR_GREEN, width=2)
-    draw.text((1015, 295), "✅ Our Speaker-Independent Split (Reality)", font=box_font_h, fill=(34, 197, 94))
+    draw.rounded_rectangle([(1015, 290), (1045, 320)], radius=4, fill=(20, 60, 25), outline=COLOR_GREEN)
+    draw.text((1024, 292), "+", font=get_font(FONT_BOLD, 18), fill=(150, 255, 160))
+    draw.text((1060, 294), "Our Speaker-Independent Split (Reality)", font=box_font_h, fill=(34, 197, 94))
+    
     draw.text((1015, 360), "• RAVDESS 24 professional actors partitioned strictly by ID", font=box_font_body, fill=COLOR_TEXT_MAIN)
     draw.text((1015, 415), "• Train: Actors 01-16 (8 Male, 8 Female, 66.7%)", font=box_font_body, fill=COLOR_TEXT_MUTED)
     draw.text((1015, 470), "• Validation: Actors 17-20 (2 Male, 2 Female, 16.7%)", font=box_font_body, fill=COLOR_TEXT_MUTED)
     draw.text((1015, 525), "• Test: Actors 21-24 (2 Male, 2 Female) — 100% UNSEEN", font=box_font_body, fill=(34, 197, 94))
     
     draw.rounded_rectangle([(1015, 665), (1745, 745)], radius=12, fill=(20, 55, 25))
-    draw.text((1045, 690), "HONEST RESULT: Generalizes to Real Human Emotions", font=get_font(FONT_BOLD, 20), fill=(150, 255, 160))
+    draw.text((1045, 690), "HONEST RESULT: Generalizes to Real Human Emotions", font=get_font(FONT_BOLD, 19), fill=(150, 255, 160))
 
     img.save(path)
     print(f"Rendered: {path.name}")
@@ -250,8 +271,8 @@ def render_slide_features_model(path: Path):
         ("RMS Energy (2-D)", "Frame-level Root-Mean-Square energy tracking dynamic loudness contour.", (168, 153, 138))
     ]
 
-    h_font = get_font(FONT_BOLD, 23)
-    b_font = get_font(FONT_REGULAR, 18)
+    h_font = get_font(FONT_BOLD, 22)
+    b_font = get_font(FONT_REGULAR, 17)
 
     for i, (f_name, f_desc, f_col) in enumerate(feats):
         y = 265 + i * 132
@@ -260,7 +281,7 @@ def render_slide_features_model(path: Path):
         draw.text((165, y + 60), f_desc, font=b_font, fill=COLOR_TEXT_MUTED)
 
     draw.rounded_rectangle([(1220, 265), (1780, 790)], radius=16, fill=(28, 21, 16), outline=COLOR_AMBER, width=2)
-    draw.text((1255, 300), "🧠 PyTorch 1D CNN Architecture", font=get_font(FONT_BOLD, 24), fill=COLOR_TEXT_MAIN)
+    draw.text((1255, 300), "PyTorch 1D CNN Architecture", font=get_font(FONT_BOLD, 23), fill=COLOR_TEXT_MAIN)
     
     arch_lines = [
         "• Conv1D Block 1: 64 filters (k=5)",
@@ -269,12 +290,12 @@ def render_slide_features_model(path: Path):
         "• Conv1D Block 4: 256 filters (k=3)",
         "• Batch Normalization & LeakyReLU",
         "• AdaptiveAvgPool1d Global Pooling",
-        "• Dense Classifier: 256 → 128 → 8",
+        "• Dense Classifier: 256 -> 128 -> 8",
         "• Class-Weighted CrossEntropyLoss"
     ]
     for idx, line in enumerate(arch_lines):
         col = COLOR_AMBER_BRIGHT if ("Conv" in line or "Class" in line) else COLOR_TEXT_MUTED
-        draw.text((1255, 355 + idx * 48), line, font=get_font(FONT_REGULAR, 19), fill=col)
+        draw.text((1255, 355 + idx * 48), line, font=get_font(FONT_REGULAR, 18), fill=col)
 
     img.save(path)
     print(f"Rendered: {path.name}")
@@ -295,7 +316,7 @@ def render_slide_live_demo(path: Path):
     # Active recording header
     draw.rounded_rectangle([(165, 285), (1095, 345)], radius=10, fill=(60, 20, 20), outline=COLOR_RED, width=1)
     draw.ellipse([(190, 305), (210, 325)], fill=COLOR_RED)
-    draw.text((225, 302), "LIVE RECORDING ACTIVE — Speak into microphone...", font=get_font(FONT_BOLD, 18), fill=(255, 140, 140))
+    draw.text((225, 302), "LIVE RECORDING ACTIVE — Speak into microphone...", font=get_font(FONT_BOLD, 17), fill=(255, 140, 140))
     draw.text((990, 297), "2.4s", font=get_font(FONT_BOLD, 28), fill=COLOR_RED)
 
     # Waveform canvas
@@ -305,27 +326,27 @@ def render_slide_live_demo(path: Path):
         amp = np.sin(w / 30) * np.sin(w / 80) * 38 + np.random.normal(0, 6)
         draw.line([(175 + w, 412 - amp), (175 + w, 412 + amp)], fill=COLOR_AMBER_BRIGHT, width=2)
 
-    # Play/Pause/Stop/Delete Toolbar
-    btns = [("▶ Play", (217, 119, 6)), ("⏸ Pause", (50, 38, 30)), ("⏹ Stop", (50, 38, 30)), ("🗑️ Delete", (120, 30, 30))]
+    # Play/Pause/Stop/Delete Toolbar (Clean text labels, no broken glyphs)
+    btns = [("PLAY", (217, 119, 6)), ("PAUSE", (50, 38, 30)), ("STOP", (50, 38, 30)), ("DELETE", (120, 30, 30))]
     for b_idx, (b_label, b_color) in enumerate(btns):
         bx = 165 + b_idx * 235
         draw.rounded_rectangle([(bx, 480), (bx + 220, 532)], radius=8, fill=b_color)
-        draw.text((bx + 62, 494), b_label, font=get_font(FONT_BOLD, 18), fill=COLOR_TEXT_MAIN)
+        draw.text((bx + 75, 496), b_label, font=get_font(FONT_BOLD, 17), fill=COLOR_TEXT_MAIN)
 
     # Classified emotion card
     draw.rounded_rectangle([(165, 550), (1095, 765)], radius=12, fill=(32, 24, 18), outline=COLOR_AMBER, width=1)
-    draw.text((190, 570), "CLASSIFIED EMOTION", font=get_font(FONT_BOLD, 16), fill=COLOR_TEXT_DIM)
-    draw.text((190, 600), "ANGRY", font=get_font(FONT_BOLD, 42), fill=COLOR_AMBER_BRIGHT)
-    draw.rounded_rectangle([(380, 610), (520, 646)], radius=14, fill=(80, 25, 25), outline=COLOR_RED, width=1)
-    draw.text((400, 620), "High Arousal", font=get_font(FONT_BOLD, 15), fill=(255, 120, 120))
+    draw.text((190, 570), "CLASSIFIED EMOTION", font=get_font(FONT_BOLD, 15), fill=COLOR_TEXT_DIM)
+    draw.text((190, 598), "ANGRY", font=get_font(FONT_BOLD, 42), fill=COLOR_AMBER_BRIGHT)
+    draw.rounded_rectangle([(380, 608), (520, 644)], radius=14, fill=(80, 25, 25), outline=COLOR_RED, width=1)
+    draw.text((400, 618), "High Arousal", font=get_font(FONT_BOLD, 15), fill=(255, 120, 120))
     
-    draw.rounded_rectangle([(190, 680), (1070, 695)], radius=8, fill=(20, 15, 12))
-    draw.rounded_rectangle([(190, 680), (190 + int(880 * 0.742), 695)], radius=8, fill=COLOR_AMBER_BRIGHT)
+    draw.rounded_rectangle([(190, 678), (1070, 693)], radius=8, fill=(20, 15, 12))
+    draw.rounded_rectangle([(190, 678), (190 + int(880 * 0.742), 693)], radius=8, fill=COLOR_AMBER_BRIGHT)
     draw.text((190, 715), "Confidence: 74.2% • Unseen Actor Voice Generalization", font=get_font(FONT_REGULAR, 16), fill=COLOR_TEXT_MUTED)
 
     # Right: History Deck
     draw.rounded_rectangle([(1160, 265), (1780, 790)], radius=16, fill=(28, 21, 16), outline=(60, 46, 36), width=2)
-    draw.text((1195, 300), "📜 Live Recordings History Deck", font=get_font(FONT_BOLD, 24), fill=COLOR_TEXT_MAIN)
+    draw.text((1195, 300), "Live Recordings History Deck", font=get_font(FONT_BOLD, 23), fill=COLOR_TEXT_MAIN)
 
     hist_items = [
         ("Microphone Recording #3", "Just now • 3.00s", "Angry (74.2%)", COLOR_RED),
@@ -336,7 +357,7 @@ def render_slide_live_demo(path: Path):
     for h_i, (h_title, h_sub, h_tag, h_col) in enumerate(hist_items):
         hy = 355 + h_i * 102
         draw.rounded_rectangle([(1195, hy), (1745, hy + 86)], radius=10, fill=(20, 15, 12), outline=(50, 38, 30), width=1)
-        draw.text((1220, hy + 16), h_title, font=get_font(FONT_BOLD, 19), fill=COLOR_TEXT_MAIN)
+        draw.text((1220, hy + 16), h_title, font=get_font(FONT_BOLD, 18), fill=COLOR_TEXT_MAIN)
         draw.text((1220, hy + 48), h_sub, font=get_font(FONT_REGULAR, 15), fill=COLOR_TEXT_DIM)
         draw.rounded_rectangle([(1535, hy + 22), (1720, hy + 62)], radius=12, fill=(40, 30, 24), outline=h_col, width=1)
         draw.text((1550, hy + 30), h_tag, font=get_font(FONT_BOLD, 14), fill=h_col)
@@ -363,15 +384,15 @@ def render_slide_confusion(path: Path):
         draw.rounded_rectangle([(140, 265), (800, 785)], radius=14, fill=(24, 18, 14))
 
     draw.rounded_rectangle([(840, 265), (1780, 785)], radius=16, fill=(28, 21, 16), outline=COLOR_AMBER, width=1)
-    draw.text((875, 300), "🔍 What Does the Model Confuse and Why?", font=get_font(FONT_BOLD, 25), fill=COLOR_TEXT_MAIN)
+    draw.text((875, 300), "What Does the Model Confuse and Why?", font=get_font(FONT_BOLD, 24), fill=COLOR_TEXT_MAIN)
 
     reasons = [
-        ("High Arousal Overlap: Angry ↔ Happy", "Both share identical spectral signatures: elevated pitch (F0), rapid speech cadence, and sharp high-frequency energy."),
-        ("Low Arousal Compression: Sad ↔ Calm ↔ Neutral", "Subdued dynamic range, slow tempo, and flat pitch contours make subtle sadness acoustic cousins with calm speech."),
-        ("Vocal Jitter & Instability: Fear ↔ Surprise", "Both display sudden pitch excursions, vocal breathiness, and acoustic jitter in frequency bands.")
+        ("High Arousal Overlap: Angry <-> Happy", "Both share identical spectral signatures: elevated pitch (F0), rapid speech cadence, and sharp high-frequency energy."),
+        ("Low Arousal Compression: Sad <-> Calm <-> Neutral", "Subdued dynamic range, slow tempo, and flat pitch contours make subtle sadness acoustic cousins with calm speech."),
+        ("Vocal Jitter & Instability: Fear <-> Surprise", "Both display sudden pitch excursions, vocal breathiness, and acoustic jitter in frequency bands.")
     ]
 
-    r_title_font = get_font(FONT_BOLD, 21)
+    r_title_font = get_font(FONT_BOLD, 20)
     r_body_font = get_font(FONT_REGULAR, 17)
 
     for idx, (rt, rb) in enumerate(reasons):
@@ -389,42 +410,55 @@ def render_slide_confusion(path: Path):
 
 
 def render_slide_thank_you(path: Path):
+    """
+    Closing slide strictly adhering to instructions:
+    - Displays:
+        Speech Emotion Recognition
+        AI-Powered Speech Emotion Analysis
+        Thank You for Watching!
+    - Zero fake GitHub URLs or invented repositories.
+    """
     img, draw = create_base_canvas()
     draw.rounded_rectangle([(100, 110), (1820, 825)], radius=20, fill=COLOR_CARD, outline=(60, 46, 36), width=2)
 
-    title_font = get_font(FONT_BOLD, 58)
-    draw.text((140, 160), "Thank You for Watching!", font=title_font, fill=COLOR_TEXT_MAIN)
-    sub_font = get_font(FONT_REGULAR, 28)
-    draw.text((140, 240), "Speech Emotion Recognition (SER) Project is Open Source", font=sub_font, fill=COLOR_AMBER_BRIGHT)
+    # Top Pill
+    draw.rounded_rectangle([(770, 140), (1150, 182)], radius=21, fill=(50, 36, 26), outline=COLOR_AMBER, width=1)
+    draw.text((800, 151), "AI RESEARCH & ENGINEERING", font=get_font(FONT_BOLD, 17), fill=COLOR_AMBER_BRIGHT)
 
-    ctas = [
-        ("⭐ Star on GitHub", "Explore clean PyTorch code, datasets, & training pipelines.", COLOR_AMBER),
-        ("🌐 Try Live Web Demo", "Instant deployment on GitHub Pages with live microphone recording.", COLOR_TERRACOTTA),
-        ("🤝 Connect on LinkedIn", "Let's discuss machine learning, speech processing, and audio AI.", COLOR_GREEN)
+    # Core required headings
+    title_font = get_font(FONT_BOLD, 62)
+    draw.text((140, 215), "Speech Emotion Recognition", font=title_font, fill=COLOR_TEXT_MAIN)
+    
+    sub_font = get_font(FONT_REGULAR, 30)
+    draw.text((140, 295), "AI-Powered Speech Emotion Analysis", font=sub_font, fill=COLOR_AMBER_BRIGHT)
+
+    ty_font = get_font(FONT_BOLD, 44)
+    draw.text((140, 355), "Thank You for Watching!", font=ty_font, fill=(255, 230, 200))
+
+    # 3 Architecture Summary Cards
+    summaries = [
+        ("Strict Speaker Independence", "Trained on Actors 01-16, tested strictly on unseen Actors 21-24 with zero data leakage.", COLOR_AMBER),
+        ("280-D Acoustic Features", "40 Mel filterbanks, velocity deltas, acceleration delta-deltas, pitch chroma & RMS energy.", COLOR_TERRACOTTA),
+        ("Deep 1D CNN in PyTorch", "Class-weighted loss, spatial dropout, batch normalization & real-time ONNX web inference.", COLOR_GREEN)
     ]
-    c_title = get_font(FONT_BOLD, 23)
+    c_title = get_font(FONT_BOLD, 22)
     c_desc = get_font(FONT_REGULAR, 17)
 
-    for i, (ct, cd, cc) in enumerate(ctas):
+    for i, (ct, cd, cc) in enumerate(summaries):
         x = 140 + i * 560
-        draw.rounded_rectangle([(x, 310), (x + 520, 520)], radius=14, fill=(24, 18, 14), outline=cc, width=2)
-        draw.text((x + 30, 345), ct, font=c_title, fill=cc)
-        draw.text((x + 30, 410), cd[:34], font=c_desc, fill=COLOR_TEXT_MAIN)
-        draw.text((x + 30, 442), cd[34:], font=c_desc, fill=COLOR_TEXT_MUTED)
+        draw.rounded_rectangle([(x, 440), (x + 520, 660)], radius=14, fill=(24, 18, 14), outline=cc, width=2)
+        draw.text((x + 28, 475), ct, font=c_title, fill=cc)
+        words = cd.split()
+        mid = len(words) // 2
+        line1 = " ".join(words[:mid])
+        line2 = " ".join(words[mid:])
+        draw.text((x + 28, 540), line1, font=c_desc, fill=COLOR_TEXT_MAIN)
+        draw.text((x + 28, 575), line2, font=c_desc, fill=COLOR_TEXT_MUTED)
 
-    techs = ["PyTorch 2.0", "Librosa Audio", "RAVDESS Benchmark", "HTML5 Web Audio", "GitHub Actions"]
-    t_font = get_font(FONT_BOLD, 17)
-    for t_i, tech in enumerate(techs):
-        tx = 140 + t_i * 335
-        draw.rounded_rectangle([(tx, 555), (tx + 305, 602)], radius=22, fill=(38, 28, 22), outline=COLOR_AMBER, width=1)
-        draw.text((tx + 28, 568), f"✓ {tech}", font=t_font, fill=COLOR_AMBER_BRIGHT)
-
-    # Repository & Demo link banner
-    draw.rounded_rectangle([(140, 635), (1780, 725)], radius=14, fill=(26, 20, 15), outline=COLOR_AMBER, width=1)
-    link_font = get_font(FONT_BOLD, 21)
-    link_sub = get_font(FONT_REGULAR, 17)
-    draw.text((175, 655), "🔗 Repository: github.com/username/emotion-recognition-speech • Live Web Demo on GitHub Pages", font=link_font, fill=COLOR_TEXT_MAIN)
-    draw.text((175, 690), "💡 Engineered with Speaker Independence • 280-D Acoustic Features • PyTorch 1D CNN", font=link_sub, fill=COLOR_AMBER_BRIGHT)
+    # Bottom Verification Tag Banner
+    draw.rounded_rectangle([(140, 700), (1780, 770)], radius=12, fill=(26, 20, 15), outline=COLOR_AMBER, width=1)
+    tag_font = get_font(FONT_BOLD, 18)
+    draw.text((180, 722), "PyTorch Deep Learning • Librosa Audio Processing • RAVDESS Benchmark • Web Audio API", font=tag_font, fill=COLOR_AMBER_BRIGHT)
 
     img.save(path)
     print(f"Rendered: {path.name}")
@@ -672,7 +706,7 @@ def build_video():
     file_size_mb = output_mp4.stat().st_size / (1024 * 1024)
 
     print("\n" + "=" * 65)
-    print(f"🎉 SUCCESS! PROFESSIONALLY REFINED VIDEO EXPORTED:")
+    print(f"SUCCESS! PROFESSIONALLY REFINED VIDEO EXPORTED:")
     print(f"  Location:   {output_mp4}")
     print(f"  Size:       {file_size_mb:.2f} MB")
     print(f"  Duration:   {dur_final:.2f} seconds")

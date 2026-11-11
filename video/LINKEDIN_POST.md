@@ -17,8 +17,7 @@ I built a production-grade Speech Emotion Recognition system addressing this exa
 4. **Honest Acoustic Confusion Matrix**: On completely unseen speakers, the model achieves **38.3% accuracy and 37.8% Macro F1** (3x over the 12.5% random baseline). Error analysis shows intuitive human acoustic overlaps: *Happy* vs *Angry* (shared high vocal arousal), and *Sadness* vs *Calm* (shared subdued fundamental frequency).
 5. **Interactive Responsive Web App**: Luxury warm-espresso & cashmere UI with light/dark theme, real-time 3-second microphone recording with live waveform visualizer, audio player controls (Play, Pause, Stop, Delete), and a local recordings history deck.
 
-💻 **GitHub Repo**: [Your GitHub Repository URL]
-📊 **Stack**: PyTorch | Librosa | ONNX Runtime | HTML5 Web Audio API | GitHub Actions
+📊 **Stack**: PyTorch | Librosa | ONNX Runtime | HTML5 Web Audio API
 
 Check out the 1-minute video walk-through below! 👇
 

@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
 [![Librosa](https://img.shields.io/badge/Librosa-Audio%20Feature%20Extraction-brightgreen.svg)](https://librosa.org/)
-[![GitHub Pages](https://img.shields.io/badge/Demo-GitHub%20Pages%20Live-success.svg)](https://pages.github.com/)
+[![Web Demo](https://img.shields.io/badge/Demo-Vanilla%20HTML5%20%2F%20WebAudio-success.svg)](#-interactive-web-application--player-toolbar)
 
 An end-to-end Speech Emotion Recognition (SER) deep learning system built with **PyTorch** and **Librosa**, featuring **strict speaker-independent train/validation/test partitioning**, comprehensive acoustic feature extraction (MFCCs, Deltas, Delta-Deltas, Chroma, Spectral Contrast, RMS), per-class performance evaluation, and an interactive **HTML5/CSS3/JavaScript Web UI** deployable to **GitHub Pages**.
 
@@ -145,10 +145,9 @@ The `web/` directory contains a standalone client-side web application built wit
 
 ## 🚀 Quickstart: Reproduce Everything from Scratch
 
-### 1. Clone & Install Dependencies
+### 1. Local Environment & Dependencies
 ```bash
-git clone https://github.com/<your-username>/emotion-recognition-speech.git
-cd emotion-recognition-speech
+cd "emotion recognition speech"
 pip install -r requirements.txt
 ```
 

@@ -106,10 +106,10 @@ function applyTheme(theme) {
   const text = document.getElementById("theme-text");
 
   if (theme === "light") {
-    icon.textContent = "☀️";
+    icon.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
     text.textContent = "Light Cream";
   } else {
-    icon.textContent = "🌙";
+    icon.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
     text.textContent = "Dark Brown";
   }
 
@@ -211,6 +211,37 @@ function startVisualizer(isLiveMic = false) {
 /* ==========================================================================
    3. Loading Audio Tracks & Controls (Play, Pause, Stop, Delete)
    ========================================================================== */
+function updatePlaybackStatus(status) {
+  const el = document.getElementById("playback-status");
+  if (el) el.textContent = status;
+  const pill = document.getElementById("active-track-status-pill");
+  if (pill) {
+    if (status === "Playing") {
+      pill.className = "status-pill status-playing";
+      pill.textContent = "Playing";
+    } else if (status === "Paused") {
+      pill.className = "status-pill status-paused";
+      pill.textContent = "Paused";
+    } else if (status === "Stopped" || status === "Finished") {
+      pill.className = "status-pill status-stopped";
+      pill.textContent = status;
+    } else {
+      pill.className = "status-pill status-ready";
+      pill.textContent = "Ready";
+    }
+  }
+}
+
+function setPlayBtnState(playing) {
+  const btn = document.getElementById("play-btn");
+  if (!btn) return;
+  if (playing) {
+    btn.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Playing</span>`;
+  } else {
+    btn.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg><span>Play</span>`;
+  }
+}
+
 function loadAudioUrl(url, expectedEmotion = null, displayName = null, durationHint = null) {
   if (currentAudio) {
     currentAudio.pause();
@@ -229,20 +260,26 @@ function loadAudioUrl(url, expectedEmotion = null, displayName = null, durationH
 
   activeTrackName = displayName || "Audio Clip";
 
-  // Update Active Track Display
+  // Update Enhanced Active Track Display
   const banner = document.getElementById("active-track-banner");
   const trackTitle = document.getElementById("active-track-name");
+  const trackDur = document.getElementById("active-track-duration");
+  const trackEmo = document.getElementById("active-track-emotion");
   const trackBadge = document.getElementById("active-track-badge");
-  banner.style.display = "flex";
+  
+  banner.style.display = "block";
   trackTitle.textContent = activeTrackName;
-  trackBadge.textContent = expectedEmotion ? expectedEmotion.toUpperCase() : "CUSTOM";
+  if (trackDur) trackDur.textContent = durationHint ? `${durationHint}s` : "3.00s";
+  updatePlaybackStatus("Ready");
+  setPlayBtnState(false);
 
   currentAudio.addEventListener("loadedmetadata", () => {
     const dur = currentAudio.duration && !isNaN(currentAudio.duration) 
       ? currentAudio.duration.toFixed(2) 
       : (durationHint || "3.00");
     document.getElementById("audio-time").textContent = `0.00 / ${dur}s`;
-    document.getElementById("playback-status").textContent = "Loaded";
+    if (trackDur) trackDur.textContent = `${dur}s`;
+    updatePlaybackStatus("Ready");
   });
 
   currentAudio.addEventListener("timeupdate", () => {
@@ -257,12 +294,19 @@ function loadAudioUrl(url, expectedEmotion = null, displayName = null, durationH
 
   currentAudio.addEventListener("ended", () => {
     isPlaying = false;
-    document.getElementById("play-btn").textContent = "▶ Play";
-    document.getElementById("playback-status").textContent = "Finished";
+    setPlayBtnState(false);
+    updatePlaybackStatus("Finished");
   });
 
   // Run Emotion Prediction
   const predData = predictEmotion(expectedEmotion);
+  if (predData) {
+    if (trackEmo) trackEmo.textContent = `${predData.emotion} (${predData.confidence}%)`;
+    if (trackBadge) {
+      trackBadge.className = `tag-badge ${predData.arousal === 'High' ? 'tag-arousal-high' : 'tag-arousal-low'}`;
+      trackBadge.textContent = `${predData.arousal} Arousal`;
+    }
+  }
   return predData;
 }
 
@@ -274,8 +318,8 @@ function playAudio() {
   ensureAudioContext();
   currentAudio.play();
   isPlaying = true;
-  document.getElementById("play-btn").textContent = "▶ Playing";
-  document.getElementById("playback-status").textContent = "Playing";
+  setPlayBtnState(true);
+  updatePlaybackStatus("Playing");
   startVisualizer(false);
 }
 
@@ -283,8 +327,8 @@ function pauseAudio() {
   if (!currentAudio) return;
   currentAudio.pause();
   isPlaying = false;
-  document.getElementById("play-btn").textContent = "▶ Play";
-  document.getElementById("playback-status").textContent = "Paused";
+  setPlayBtnState(false);
+  updatePlaybackStatus("Paused");
 }
 
 function stopAudio() {
@@ -292,8 +336,8 @@ function stopAudio() {
   currentAudio.pause();
   currentAudio.currentTime = 0;
   isPlaying = false;
-  document.getElementById("play-btn").textContent = "▶ Play";
-  document.getElementById("playback-status").textContent = "Stopped";
+  setPlayBtnState(false);
+  updatePlaybackStatus("Stopped");
   drawEmptyWaveform();
 }
 
@@ -306,7 +350,8 @@ function deleteCurrentAudio() {
 
   document.getElementById("active-track-banner").style.display = "none";
   document.getElementById("audio-time").textContent = "0.00 / 0.00s";
-  document.getElementById("playback-status").textContent = "Deleted";
+  updatePlaybackStatus("Idle");
+  setPlayBtnState(false);
   document.getElementById("pred-emotion").textContent = "Select or Record Audio";
   document.getElementById("pred-badge").textContent = "--";
   document.getElementById("conf-bar").style.width = "0%";
@@ -353,7 +398,7 @@ async function startRecording() {
   const recordBtn = document.getElementById("record-btn");
   banner.style.display = "flex";
   recordBtn.classList.add("recording");
-  recordBtn.textContent = "⏹ Stop (3s)";
+  recordBtn.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="4" y="4" width="16" height="16"/></svg><span>Stop (3s)</span>`;
 
   // Start live waveform visualization
   startVisualizer(true);
@@ -387,7 +432,7 @@ function stopRecording() {
   const recordBtn = document.getElementById("record-btn");
   banner.style.display = "none";
   recordBtn.classList.remove("recording");
-  recordBtn.textContent = "🔴 Record Mic (3s)";
+  recordBtn.innerHTML = `<span class="rec-dot"></span><span>Record Mic (3s)</span>`;
 }
 
 function cancelRecording() {
@@ -401,8 +446,9 @@ function cancelRecording() {
 
   recordedChunks = [];
   document.getElementById("recording-banner").style.display = "none";
-  document.getElementById("record-btn").classList.remove("recording");
-  document.getElementById("record-btn").textContent = "🔴 Record Mic (3s)";
+  const recordBtn = document.getElementById("record-btn");
+  recordBtn.classList.remove("recording");
+  recordBtn.innerHTML = `<span class="rec-dot"></span><span>Record Mic (3s)</span>`;
   drawEmptyWaveform();
 }
 
@@ -469,15 +515,24 @@ function renderHistory() {
       <div class="history-meta">
         <div class="history-title">${item.name}</div>
         <div class="history-sub">
-          <span>🕒 ${item.timestamp}</span>
-          <span>•</span>
+          <span style="display:inline-flex;align-items:center;gap:0.3rem;">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            ${item.timestamp}
+          </span>
+          <span class="meta-sep">•</span>
           <span>${item.duration}</span>
         </div>
       </div>
       <div class="history-actions">
         <span class="tag-badge ${arousalClass}">${meta.label} (${item.confidence}%)</span>
         <button class="btn btn-sm btn-outline load-hist-btn" data-index="${index}" title="Load onto player">Load</button>
-        <button class="btn btn-sm btn-danger del-hist-btn" data-index="${index}" title="Delete recording">✕</button>
+        <button class="btn btn-sm btn-danger del-hist-btn" data-index="${index}" title="Delete recording" style="padding:0.25rem 0.5rem;">
+          <svg class="svg-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
     `;
     list.appendChild(el);
@@ -668,10 +723,10 @@ function showConfusionDetail(trueEmo, predEmo, pct) {
 
   box.style.display = "block";
   if (trueEmo === predEmo) {
-    title.innerHTML = `✅ Accurate Recognition: ${trueEmo} (${pct}%)`;
+    title.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.35rem;"><polyline points="20 6 9 17 4 12"/></svg> Accurate Recognition: ${trueEmo} (${pct}%)`;
     desc.textContent = `The model correctly extracted distinctive acoustic cues for ${trueEmo} on unseen test actors. ${EMOTION_METADATA[trueEmo.toLowerCase()]?.desc || ''}`;
   } else {
-    title.innerHTML = `⚠️ Confusion: True ${trueEmo} → Classified as ${predEmo} (${pct}%)`;
+    title.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.35rem;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Confusion: True ${trueEmo} → Classified as ${predEmo} (${pct}%)`;
     const pairKey = `${trueEmo.toLowerCase()}-${predEmo.toLowerCase()}`;
     const reverseKey = `${predEmo.toLowerCase()}-${trueEmo.toLowerCase()}`;
     const explanation = CONFUSION_REASONS[pairKey] || CONFUSION_REASONS[reverseKey] || 

@@ -63,10 +63,10 @@ while subtle sadness shares acoustic prosody with calm speech.
 Thank you for watching!
 
 17
-00:00:55,289 --> 00:00:59,090
-The project is open source on GitHub and live on GitHub Pages.
+00:00:55,289 --> 00:00:59,289
+Speech Emotion Recognition delivers deep acoustic intelligence for real-world voice signals.
 
 18
-00:00:59,490 --> 00:01:03,689
-Star the repository, test your voice, and let's connect on LinkedIn!
+00:00:59,590 --> 00:01:03,390
+Connect on LinkedIn to discuss the project!
 
