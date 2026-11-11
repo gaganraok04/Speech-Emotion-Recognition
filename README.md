@@ -119,9 +119,12 @@ Acoustic emotion space is organized along two psychological dimensions: **Arousa
 ## 🌐 Interactive Web UI & GitHub Pages Deployment
 
 The `web/` directory contains a standalone client-side web application built with **HTML5, CSS3, and JavaScript** using the **Web Audio API**:
-- **Real-Time Waveform Visualizer**: Live animated canvas visualizer of playing audio.
+- **☕ Warm Brown & Roasted Espresso Palette**: Luxury editorial theme with instant **Dark Brown $\leftrightarrow$ Light Cream** mode switching and persistent `localStorage` memory.
+- **📱 Responsive Across All Devices**: Optimized layouts for mobile phones (touch targets $\ge 44\text{px}$, kinetic table scrolling), tablets, laptops, and ultra-wide desktops.
+- **🔴 Animated 3-Second Microphone Recorder**: Glowing pulse rings, live countdown timer (`3.0s` $\rightarrow$ `0.0s`), and real-time mic waveform visualization.
+- **🎛️ Full Player Controls**: Dedicated **Play (▶)**, **Pause (⏸)**, **Stop (⏹)**, and **Delete (🗑️)** buttons.
+- **📜 Recordings History Deck**: Automatically tracks and saves each voice clip with timestamp, detected emotion badge, and one-click replay/load.
 - **Unseen Actor Test Samples**: Listen to Male and Female audio clips of unseen test speakers (Actors 21–24) and see predictions in real time.
-- **Microphone Recording & Audio Upload**: Record 3 seconds from your own mic or upload any `.wav`/`.mp3` file.
 - **Interactive 8×8 Confusion Matrix**: Hover and click on any cell to see acoustic confusion explanations.
 
 ### Deploying to GitHub Pages in 3 Steps:
