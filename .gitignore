@@ -22,3 +22,11 @@ data/Audio_Speech_Actors_01-24.zip
 .idea/
 .DS_Store
 Thumbs.db
+
+# Video generation temporary artifacts
+video/clips/
+video/sub_images/
+video/audio/
+video/*.txt
+video/unsubbed_video.mp4
+video/full_narration.mp3
