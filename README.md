@@ -172,6 +172,12 @@ python -m src.train --model cnn1d --epochs 60 --batch-size 32
 python -m src.evaluate
 ```
 
+### 6. Generate 1-Minute LinkedIn Showcase Video (1080p with Female Voice & Burned Subtitles)
+```bash
+python scripts/generate_video.py
+```
+Outputs high-definition video [`video/emotion_recognition_linkedin_1min.mp4`](video/emotion_recognition_linkedin_1min.mp4) along with ready-to-post LinkedIn text in [`video/LINKEDIN_POST.md`](video/LINKEDIN_POST.md).
+
 ---
 
 ## 📁 Repository Structure
@@ -182,14 +188,20 @@ emotion-recognition-speech/
 │   ├── raw/                 # Extracted RAVDESS audio (Actors 01 to 24)
 │   └── processed/           # Cached features (.npz) and metadata splits
 ├── models/
-│   └── best_cnn1d.pt        # Saved PyTorch checkpoint with highest Val F1
+│   ├── best_cnn1d.pt        # Saved PyTorch checkpoint with highest Val F1
+│   └── emotion_cnn1d.onnx   # Production ONNX model export
+├── notebooks/
+│   ├── 01_EDA_and_Audio_Visualization.ipynb  # Interactive EDA & feature spectrograms
+│   └── visualize_audio_features.py           # Feature analysis & plot generator
 ├── reports/
 │   ├── per_class_metrics.csv # Precision, Recall, F1, Support table
 │   ├── per_class_metrics.json
 │   ├── confusion_matrix.png # High-resolution confusion matrix heatmap
 │   └── ERROR_ANALYSIS.md    # Detailed acoustic discussion of failure modes
 ├── scripts/
-│   └── download_ravdess.py  # Automated RAVDESS downloader & validator
+│   ├── download_ravdess.py  # Automated RAVDESS downloader & validator
+│   ├── generate_video.py    # 1080p video synthesizer with Edge-TTS voiceover & subtitles
+│   └── serve_web.py         # Local development server for web UI
 ├── src/
 │   ├── dataset.py           # Speaker-independent partitioning (Actors 21-24 test)
 │   ├── features.py          # 280-D MFCC, Delta, Chroma, Contrast, RMS extraction
@@ -197,10 +209,17 @@ emotion-recognition-speech/
 │   ├── preprocess.py        # Feature extraction pipeline & test sample bundler
 │   ├── train.py             # Training loop with class-weighted CrossEntropy
 │   └── evaluate.py          # Classification report & confusion matrix generator
-├── web/                     # GitHub Pages static site
-│   ├── index.html           # Modern responsive layout
-│   ├── style.css            # Dark mode glassmorphic UI
-│   ├── app.js               # Audio playback, mic recording, waveform canvas
+├── tests/
+│   └── test_pipeline.py     # 4/4 passing unit tests verifying zero data leakage
+├── video/
+│   ├── emotion_recognition_linkedin_1min.mp4  # 1-min 1080p LinkedIn showcase video
+│   ├── LINKEDIN_POST.md                       # Ready-to-copy LinkedIn caption
+│   └── subtitles.srt                          # Synchronized subtitle captions
+├── web/                     # GitHub Pages static site (Espresso & Cashmere Theme)
+│   ├── index.html           # Modern responsive layout (mobile, tablet, laptop)
+│   ├── style.css            # Light & Dark warm brown theme
+│   ├── app.js               # Audio playback, 3s recording, waveform visualizer, history
+│   ├── emotion_cnn1d.onnx   # Browser-ready ONNX model
 │   ├── metrics.json         # Live per-class scores
 │   ├── confusion_matrix.json
 │   └── samples/             # Bundled audio test clips from unseen test actors
