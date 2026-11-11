@@ -99,16 +99,47 @@
             </button>
           </div>
 
+          <!-- Live Recording Banner & Countdown Animation -->
+          <div id="recording-banner" class="recording-banner" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="rec-pulse-ring"></div>
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em;">Recording Live Audio</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Speak clearly into your microphone...</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span id="recording-timer" class="rec-time-display">3.0s</span>
+              <button id="cancel-record-btn" class="btn btn-sm btn-outline">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Active Audio Track Display -->
+          <div id="active-track-banner" class="active-track-banner" style="display: none;">
+            <div class="track-details">
+              <span style="font-size: 1.1rem;">🎵</span>
+              <span id="active-track-name" class="track-title">Sample Loaded</span>
+            </div>
+            <span id="active-track-badge" class="tag-badge tag-arousal-low">Loaded</span>
+          </div>
+
           <!-- Waveform Canvas Box -->
           <div class="waveform-box">
             <canvas id="waveform"></canvas>
           </div>
 
-          <div class="action-row" style="align-items: center;">
-            <button class="btn btn-primary" id="play-btn">▶ Play Audio</button>
-            <div class="audio-meta-row" style="justify-content: flex-end;">
-              <span id="audio-time">0.00 / 0.00s</span>
-            </div>
+          <!-- Audio Meta Info -->
+          <div class="audio-meta-row">
+            <span>Progress: <span id="audio-time">0.00 / 0.00s</span></span>
+            <span id="playback-status" style="font-size: 0.75rem; text-transform: uppercase;">Idle</span>
+          </div>
+
+          <!-- Controls Toolbar: Play, Pause, Stop, Delete -->
+          <div class="controls-toolbar">
+            <button class="btn btn-primary" id="play-btn">▶ Play</button>
+            <button class="btn btn-outline" id="pause-btn">⏸ Pause</button>
+            <button class="btn btn-outline" id="stop-btn">⏹ Stop</button>
+            <button class="btn btn-danger" id="delete-btn" title="Delete current audio">🗑️ Delete</button>
           </div>
 
           <!-- Prediction Result Deck -->
@@ -116,7 +147,7 @@
             <div class="pred-top">
               <div>
                 <div class="pred-title-label">Classified Emotion</div>
-                <div class="pred-name" id="pred-emotion">Select an Audio Clip</div>
+                <div class="pred-name" id="pred-emotion">Select or Record Audio</div>
               </div>
               <div id="pred-badge" class="tag-badge tag-arousal-high">--</div>
             </div>
@@ -127,6 +158,19 @@
 
             <div class="prob-list" id="probs-container">
               <!-- Dynamically populated probability bars -->
+            </div>
+          </div>
+
+          <!-- Recordings History Section -->
+          <div class="history-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
+              <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
+                <span>📜</span> Recordings History
+              </span>
+              <button id="clear-history-btn" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">Clear All</button>
+            </div>
+            <div id="history-list" class="history-list">
+              <div class="history-empty">No recordings yet. Click "Record Mic (3s)" to capture speech!</div>
             </div>
           </div>
         </div>
