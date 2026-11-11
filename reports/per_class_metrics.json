@@ -1,0 +1,64 @@
+{
+  "overall_accuracy": 38.33,
+  "macro_f1": 37.84,
+  "weighted_f1": 38.01,
+  "total_test_samples": 240,
+  "classes": [
+    {
+      "Emotion": "Neutral",
+      "Precision (%)": 33.33,
+      "Recall (%)": 37.5,
+      "F1-Score (%)": 35.29,
+      "Support (Clips)": 16
+    },
+    {
+      "Emotion": "Calm",
+      "Precision (%)": 31.11,
+      "Recall (%)": 43.75,
+      "F1-Score (%)": 36.36,
+      "Support (Clips)": 32
+    },
+    {
+      "Emotion": "Happy",
+      "Precision (%)": 30.95,
+      "Recall (%)": 40.62,
+      "F1-Score (%)": 35.14,
+      "Support (Clips)": 32
+    },
+    {
+      "Emotion": "Sad",
+      "Precision (%)": 36.36,
+      "Recall (%)": 12.5,
+      "F1-Score (%)": 18.6,
+      "Support (Clips)": 32
+    },
+    {
+      "Emotion": "Angry",
+      "Precision (%)": 29.63,
+      "Recall (%)": 50.0,
+      "F1-Score (%)": 37.21,
+      "Support (Clips)": 32
+    },
+    {
+      "Emotion": "Fearful",
+      "Precision (%)": 52.38,
+      "Recall (%)": 34.38,
+      "F1-Score (%)": 41.51,
+      "Support (Clips)": 32
+    },
+    {
+      "Emotion": "Disgust",
+      "Precision (%)": 47.83,
+      "Recall (%)": 34.38,
+      "F1-Score (%)": 40.0,
+      "Support (Clips)": 32
+    },
+    {
+      "Emotion": "Surprised",
+      "Precision (%)": 65.38,
+      "Recall (%)": 53.12,
+      "F1-Score (%)": 58.62,
+      "Support (Clips)": 32
+    }
+  ]
+}

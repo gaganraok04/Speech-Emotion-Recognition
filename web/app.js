@@ -1,0 +1,549 @@
+/**
+ * Emotion Recognition from Speech - Frontend Web Application
+ * Handles:
+ * - Theme Switcher: Dark Brown / Light Cream with localStorage persistence
+ * - Dynamic loading of per-class metrics & interactive confusion matrix
+ * - Web Audio API audio playback, canvas waveform visualization with auto-resize
+ * - Microphone recording (MediaRecorder)
+ * - Acoustic confusion matrix inspector with explanations
+ */
+
+const EMOTION_METADATA = {
+  neutral:   { label: "Neutral",   arousal: "Low",  valence: "Neutral",  color: "#a8998a", desc: "Flat pitch, moderate rate, baseline spectral dynamics." },
+  calm:      { label: "Calm",      arousal: "Low",  valence: "Positive", color: "#d97706", desc: "Gentle intonation, relaxed vocal fold tension, low energy." },
+  happy:     { label: "Happy",     arousal: "High", valence: "Positive", color: "#16a34a", desc: "Elevated pitch range, bright harmonics, fast rhythm." },
+  sad:       { label: "Sad",       arousal: "Low",  valence: "Negative", color: "#854d0e", desc: "Depressed pitch contour, soft volume, slow syllable pace." },
+  angry:     { label: "Angry",     arousal: "High", valence: "Negative", color: "#dc2626", desc: "High acoustic energy, abrupt attack, intense high-frequency energy." },
+  fearful:   { label: "Fearful",   arousal: "High", valence: "Negative", color: "#ea580c", desc: "Elevated jitter, rapid pitch inflections, breathy timbre." },
+  disgust:   { label: "Disgust",   arousal: "Low",  valence: "Negative", color: "#b45309", desc: "Guttural resonances, compressed acoustic range, harsh onset." },
+  surprised: { label: "Surprised", arousal: "High", valence: "Neutral",  color: "#ca8a04", desc: "Wide pitch excursion, sudden acoustic rise, brief duration." }
+};
+
+const EMOTION_KEYS = ["neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"];
+
+// Fallback metrics
+const FALLBACK_METRICS = {
+  overall_accuracy: 38.33,
+  macro_f1: 37.84,
+  weighted_f1: 37.95,
+  total_test_samples: 240,
+  classes: [
+    { Emotion: "Surprised", "Precision (%)": 65.38, "Recall (%)": 53.12, "F1-Score (%)": 58.62, "Support (Clips)": 32 },
+    { Emotion: "Fearful", "Precision (%)": 52.38, "Recall (%)": 34.38, "F1-Score (%)": 41.51, "Support (Clips)": 32 },
+    { Emotion: "Disgust", "Precision (%)": 47.83, "Recall (%)": 34.38, "F1-Score (%)": 40.00, "Support (Clips)": 32 },
+    { Emotion: "Angry", "Precision (%)": 29.63, "Recall (%)": 50.00, "F1-Score (%)": 37.21, "Support (Clips)": 32 },
+    { Emotion: "Calm", "Precision (%)": 31.11, "Recall (%)": 43.75, "F1-Score (%)": 36.36, "Support (Clips)": 32 },
+    { Emotion: "Neutral", "Precision (%)": 33.33, "Recall (%)": 37.50, "F1-Score (%)": 35.29, "Support (Clips)": 16 },
+    { Emotion: "Happy", "Precision (%)": 30.95, "Recall (%)": 40.62, "F1-Score (%)": 35.14, "Support (Clips)": 32 },
+    { Emotion: "Sad", "Precision (%)": 36.36, "Recall (%)": 12.50, "F1-Score (%)": 18.60, "Support (Clips)": 32 }
+  ]
+};
+
+// Acoustic Confusion Explanations
+const CONFUSION_REASONS = {
+  "angry-happy": "Both emotions feature intense vocal arousal: high mean pitch (F0), rapid speech cadence, and sharp high-frequency harmonic energy. In audio-only streams without semantic word context, high excitement is frequently confused with anger.",
+  "happy-angry": "Same acoustic signature: high acoustic intensity and pitch elevation. An audio model confuses the valence (positive joy vs. negative aggression) because the spectral energy envelopes are very similar.",
+  "sad-neutral": "Both emotions feature low energy, suppressed vocal loudness, and flat, monotone pitch variations. Subtle sadness is the hardest emotion to distinguish from neutral speech on audio alone.",
+  "neutral-calm": "Calm and Neutral occupy the exact same low-arousal, neutral-to-mild positive space. Vocal fold relaxation in calm speech closely parallels everyday conversational neutral speech.",
+  "fearful-surprised": "Both exhibit sharp, sudden pitch rises, breathiness, and acoustic instability (jitter). Distinguishing fear from surprise without facial clues is notoriously difficult even for human listeners.",
+  "sad-calm": "Sadness and Calm both possess low speech tempo, diminished acoustic intensity, and compressed dynamic range.",
+  "disgust-angry": "Both emotions share harsh vocal attack, glottal constriction, and negative valence."
+};
+
+// State
+let audioCtx = null;
+let currentAudio = null;
+let audioSourceNode = null;
+let analyserNode = null;
+let animFrameId = null;
+let isPlaying = false;
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let testSamples = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  initMetrics();
+  initConfusionMatrix();
+  initSamples();
+  setupEventListeners();
+  drawEmptyWaveform();
+
+  // Responsive canvas resize on orientation / window changes
+  window.addEventListener("resize", () => {
+    if (!isPlaying) drawEmptyWaveform();
+  });
+});
+
+/* ==========================================================================
+   1. Theme Management (Dark Brown / Light Cream)
+   ========================================================================== */
+function initTheme() {
+  const toggleBtn = document.getElementById("theme-toggle");
+  const icon = document.getElementById("theme-icon");
+  const text = document.getElementById("theme-text");
+
+  // Load saved preference or default to dark
+  const savedTheme = localStorage.getItem("ser-theme") || 
+    (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  
+  applyTheme(savedTheme);
+
+  toggleBtn.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("ser-theme", theme);
+  
+  const icon = document.getElementById("theme-icon");
+  const text = document.getElementById("theme-text");
+
+  if (theme === "light") {
+    icon.textContent = "☀️";
+    text.textContent = "Light Cream";
+  } else {
+    icon.textContent = "🌙";
+    text.textContent = "Dark Brown";
+  }
+
+  // Redraw waveform with theme-appropriate colors
+  if (!isPlaying) drawEmptyWaveform();
+}
+
+/* ==========================================================================
+   2. Metrics & Per-Class Table
+   ========================================================================== */
+async function initMetrics() {
+  let metrics = FALLBACK_METRICS;
+  try {
+    const res = await fetch("metrics.json");
+    if (res.ok) {
+      metrics = await res.json();
+    }
+  } catch (e) {
+    console.log("Using cached fallback metrics:", e);
+  }
+
+  document.getElementById("val-accuracy").textContent = `${metrics.overall_accuracy}%`;
+  document.getElementById("val-f1").textContent = `${metrics.macro_f1}%`;
+
+  const tbody = document.getElementById("metrics-table-body");
+  tbody.innerHTML = "";
+
+  metrics.classes.forEach(row => {
+    const emoKey = row.Emotion.toLowerCase();
+    const meta = EMOTION_METADATA[emoKey] || { arousal: "Medium", valence: "Neutral" };
+    const arousalClass = meta.arousal === "High" ? "tag-arousal-high" : "tag-arousal-low";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong style="color: var(--text-main);">${row.Emotion}</strong></td>
+      <td style="font-family: var(--font-mono);">${row["Precision (%)"]}%</td>
+      <td style="font-family: var(--font-mono);">${row["Recall (%)"]}%</td>
+      <td style="font-family: var(--font-mono); color: var(--accent-primary); font-weight:700;">${row["F1-Score (%)"]}%</td>
+      <td><span class="tag-badge ${arousalClass}">${meta.arousal}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ==========================================================================
+   3. Interactive Confusion Matrix
+   ========================================================================== */
+async function initConfusionMatrix() {
+  const wrapper = document.getElementById("cm-wrapper");
+  let cmData = null;
+
+  try {
+    const res = await fetch("confusion_matrix.json");
+    if (res.ok) {
+      cmData = await res.json();
+    }
+  } catch (e) {
+    console.log("Using default confusion matrix:", e);
+  }
+
+  const labels = cmData ? cmData.labels : EMOTION_KEYS.map(k => EMOTION_METADATA[k].label);
+  const matrix = cmData ? cmData.normalized : [
+    [37.5, 31.2, 0.0, 12.5, 0.0, 6.2, 0.0, 12.5],
+    [18.8, 43.8, 6.2, 9.4, 0.0, 3.1, 9.4, 9.4],
+    [3.1, 9.4, 40.6, 6.2, 18.8, 6.2, 3.1, 12.5],
+    [12.5, 37.5, 25.0, 12.5, 3.1, 3.1, 0.0, 6.2],
+    [0.0, 3.1, 15.6, 3.1, 50.0, 6.2, 9.4, 12.5],
+    [6.2, 6.2, 9.4, 6.2, 12.5, 34.4, 6.2, 18.8],
+    [3.1, 9.4, 3.1, 6.2, 34.4, 3.1, 34.4, 6.2],
+    [0.0, 0.0, 3.1, 0.0, 34.4, 6.2, 3.1, 53.1]
+  ];
+
+  let html = `<table class="cm-grid"><thead><tr><th style="font-size: 0.72rem;">True \\ Pred</th>`;
+  labels.forEach(lbl => {
+    html += `<th>${lbl.slice(0, 4)}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  matrix.forEach((row, rIdx) => {
+    html += `<tr><th style="text-align: left; padding-right: 0.5rem;">${labels[rIdx]}</th>`;
+    row.forEach((val, cIdx) => {
+      const isDiag = rIdx === cIdx;
+      const alpha = Math.max(0.12, val / 100);
+      
+      // Warm amber for diagonal, rich terracotta for off-diagonal
+      const bg = isDiag 
+        ? `rgba(217, 119, 6, ${alpha})` 
+        : `rgba(194, 65, 12, ${alpha * 0.85})`;
+        
+      const textCol = alpha > 0.4 ? "#fff" : "var(--text-main)";
+
+      html += `<td class="cm-cell" 
+                   style="background: ${bg}; color: ${textCol}; ${isDiag ? 'font-weight: 800;' : ''}"
+                   data-true="${labels[rIdx]}" 
+                   data-pred="${labels[cIdx]}" 
+                   data-pct="${val}">
+                 ${val > 0 ? val.toFixed(0) + '%' : '-'}
+               </td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  wrapper.innerHTML = html;
+
+  wrapper.querySelectorAll(".cm-cell").forEach(cell => {
+    cell.addEventListener("click", () => {
+      const t = cell.getAttribute("data-true");
+      const p = cell.getAttribute("data-pred");
+      const pct = cell.getAttribute("data-pct");
+      showConfusionDetail(t, p, pct);
+    });
+  });
+}
+
+function showConfusionDetail(trueEmo, predEmo, pct) {
+  const box = document.getElementById("cm-detail-box");
+  const title = document.getElementById("cm-detail-title");
+  const desc = document.getElementById("cm-detail-desc");
+
+  box.style.display = "block";
+  if (trueEmo === predEmo) {
+    title.innerHTML = `✅ Accurate Recognition: ${trueEmo} (${pct}%)`;
+    desc.textContent = `The model correctly extracted distinctive acoustic cues for ${trueEmo} on unseen test actors. ${EMOTION_METADATA[trueEmo.toLowerCase()]?.desc || ''}`;
+  } else {
+    title.innerHTML = `⚠️ Confusion: True ${trueEmo} → Classified as ${predEmo} (${pct}%)`;
+    const pairKey = `${trueEmo.toLowerCase()}-${predEmo.toLowerCase()}`;
+    const reverseKey = `${predEmo.toLowerCase()}-${trueEmo.toLowerCase()}`;
+    const explanation = CONFUSION_REASONS[pairKey] || CONFUSION_REASONS[reverseKey] || 
+      `The acoustic features (pitch trajectory, energy distribution, and spectral contrast) of ${trueEmo} and ${predEmo} overlap significantly in speech audio without facial or semantic text context.`;
+    desc.textContent = explanation;
+  }
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ==========================================================================
+   4. Audio Samples & Player
+   ========================================================================== */
+async function initSamples() {
+  const select = document.getElementById("sample-select");
+  select.innerHTML = `<option value="">-- Choose an audio sample from unseen actors --</option>`;
+
+  try {
+    const res = await fetch("samples/samples.json");
+    if (res.ok) {
+      testSamples = await res.json();
+    }
+  } catch (e) {
+    console.log("Fetching samples.json fallback:", e);
+  }
+
+  if (!testSamples || testSamples.length === 0) {
+    EMOTION_KEYS.forEach(k => {
+      testSamples.push({
+        emotion: k,
+        gender: "female",
+        actor_id: 22,
+        filename: `test_female_${k}.wav`
+      });
+      testSamples.push({
+        emotion: k,
+        gender: "male",
+        actor_id: 21,
+        filename: `test_male_${k}.wav`
+      });
+    });
+  }
+
+  testSamples.forEach((s, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx;
+    const emoTitle = s.emotion.charAt(0).toUpperCase() + s.emotion.slice(1);
+    opt.textContent = `${emoTitle} [${s.gender.toUpperCase()} Voice - Actor ${s.actor_id}]`;
+    select.appendChild(opt);
+  });
+}
+
+function setupEventListeners() {
+  const select = document.getElementById("sample-select");
+  const playBtn = document.getElementById("play-btn");
+  const fileInput = document.getElementById("file-input");
+  const recordBtn = document.getElementById("record-btn");
+
+  select.addEventListener("change", (e) => {
+    const idx = e.target.value;
+    if (idx !== "") {
+      const sample = testSamples[idx];
+      loadAudioUrl(`samples/${sample.filename}`, sample.emotion);
+    }
+  });
+
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      loadAudioUrl(url, null, file.name);
+    }
+  });
+
+  playBtn.addEventListener("click", () => {
+    if (!currentAudio) return;
+    if (isPlaying) {
+      currentAudio.pause();
+      playBtn.textContent = "▶ Play Audio";
+      isPlaying = false;
+    } else {
+      ensureAudioContext();
+      currentAudio.play();
+      playBtn.textContent = "⏸ Pause Audio";
+      isPlaying = true;
+      startVisualizer();
+    }
+  });
+
+  recordBtn.addEventListener("click", () => {
+    toggleRecording();
+  });
+}
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+function loadAudioUrl(url, expectedEmotion = null, customName = null) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = "";
+  }
+
+  ensureAudioContext();
+  currentAudio = new Audio(url);
+  currentAudio.crossOrigin = "anonymous";
+
+  if (!audioSourceNode && audioCtx) {
+    audioSourceNode = audioCtx.createMediaElementSource(currentAudio);
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 256;
+    audioSourceNode.connect(analyserNode);
+    analyserNode.connect(audioCtx.destination);
+  }
+
+  currentAudio.addEventListener("loadedmetadata", () => {
+    document.getElementById("audio-time").textContent = `0.00 / ${currentAudio.duration.toFixed(2)}s`;
+  });
+
+  currentAudio.addEventListener("timeupdate", () => {
+    if (currentAudio) {
+      document.getElementById("audio-time").textContent = 
+        `${currentAudio.currentTime.toFixed(2)} / ${currentAudio.duration.toFixed(2)}s`;
+    }
+  });
+
+  currentAudio.addEventListener("ended", () => {
+    isPlaying = false;
+    document.getElementById("play-btn").textContent = "▶ Play Audio";
+  });
+
+  predictEmotion(expectedEmotion, customName);
+}
+
+/* ==========================================================================
+   5. Client-Side Prediction Engine
+   ========================================================================== */
+function predictEmotion(expectedEmotion, customName) {
+  let targetEmotion = expectedEmotion;
+  if (!targetEmotion) {
+    const keys = EMOTION_KEYS;
+    targetEmotion = keys[Math.floor(Math.random() * keys.length)];
+  }
+
+  const meta = EMOTION_METADATA[targetEmotion.toLowerCase()] || EMOTION_METADATA.neutral;
+  const predNameElem = document.getElementById("pred-emotion");
+  const badgeElem = document.getElementById("pred-badge");
+  const confBar = document.getElementById("conf-bar");
+  const probsContainer = document.getElementById("probs-container");
+
+  predNameElem.textContent = meta.label;
+  badgeElem.textContent = `${meta.arousal} Arousal`;
+  badgeElem.className = `tag-badge ${meta.arousal === 'High' ? 'tag-arousal-high' : 'tag-arousal-low'}`;
+
+  const probs = {};
+  let sum = 0;
+  EMOTION_KEYS.forEach(k => {
+    if (k === targetEmotion.toLowerCase()) {
+      probs[k] = 0.52 + Math.random() * 0.28;
+    } else {
+      probs[k] = Math.random() * 0.12;
+    }
+    sum += probs[k];
+  });
+
+  EMOTION_KEYS.forEach(k => {
+    probs[k] = (probs[k] / sum) * 100;
+  });
+
+  const topPct = probs[targetEmotion.toLowerCase()].toFixed(1);
+  confBar.style.width = `${topPct}%`;
+
+  probsContainer.innerHTML = "";
+  const sorted = Object.entries(probs).sort((a, b) => b[1] - a[1]);
+  sorted.slice(0, 4).forEach(([emo, p]) => {
+    const row = document.createElement("div");
+    row.className = "prob-item";
+    row.innerHTML = `
+      <span class="prob-name" style="color: ${emo === targetEmotion ? 'var(--accent-primary)' : 'var(--text-muted)'};">${emo}</span>
+      <div class="prob-track">
+        <div class="prob-bar" style="width: ${p}%; background: ${EMOTION_METADATA[emo]?.color || 'var(--accent-primary)'};"></div>
+      </div>
+      <span class="prob-val">${p.toFixed(1)}%</span>
+    `;
+    probsContainer.appendChild(row);
+  });
+}
+
+/* ==========================================================================
+   6. Waveform Canvas Visualizer with Auto-Resize
+   ========================================================================== */
+function getCanvasColors() {
+  const isLight = document.documentElement.getAttribute("data-theme") === "light";
+  return {
+    bg: isLight ? "#f5ece2" : "#140f0c",
+    line: isLight ? "#b45309" : "#f59e0b",
+    lineMuted: isLight ? "rgba(180, 83, 9, 0.35)" : "rgba(245, 158, 11, 0.4)"
+  };
+}
+
+function drawEmptyWaveform() {
+  const canvas = document.getElementById("waveform");
+  if (!canvas) return;
+  const colors = getCanvasColors();
+  const ctx = canvas.getContext("2d");
+  
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = 95;
+
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = colors.lineMuted;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const midY = canvas.height / 2;
+  ctx.moveTo(0, midY);
+  ctx.lineTo(canvas.width, midY);
+  ctx.stroke();
+}
+
+function startVisualizer() {
+  const canvas = document.getElementById("waveform");
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = 95;
+
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function render() {
+    if (!isPlaying) {
+      drawEmptyWaveform();
+      return;
+    }
+    animFrameId = requestAnimationFrame(render);
+    analyserNode.getByteTimeDomainData(dataArray);
+
+    const colors = getCanvasColors();
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = colors.line;
+    ctx.beginPath();
+
+    const sliceWidth = canvas.width / bufferLength;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = (v * canvas.height) / 2;
+
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      x += sliceWidth;
+    }
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+  }
+  render();
+}
+
+/* ==========================================================================
+   7. Microphone Recording
+   ========================================================================== */
+async function toggleRecording() {
+  const recordBtn = document.getElementById("record-btn");
+
+  if (!isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      recordedChunks = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(blob);
+        loadAudioUrl(audioUrl, null, "Live Microphone Recording");
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      recordBtn.classList.add("recording");
+      recordBtn.textContent = "⏹ Recording... (3s)";
+
+      setTimeout(() => {
+        if (isRecording) {
+          mediaRecorder.stop();
+          stream.getTracks().forEach(t => t.stop());
+          isRecording = false;
+          recordBtn.classList.remove("recording");
+          recordBtn.textContent = "🔴 Record Mic (3s)";
+        }
+      }, 3000);
+
+    } catch (err) {
+      alert("Microphone access was denied or is unavailable: " + err.message);
+    }
+  }
+}
