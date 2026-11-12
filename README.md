@@ -231,7 +231,7 @@ Open `http://localhost:8000` in your browser.
 
 ### 1. Environment Setup
 ```bash
-git clone https://github.com/<your-username>/speech-emotion-recognition.git
+git clone https://github.com/gaganraok04/speech-emotion-recognition.git
 cd speech-emotion-recognition
 pip install -r requirements.txt
 ```
