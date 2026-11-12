@@ -26,6 +26,8 @@ Thumbs.db
 # Video generation temporary artifacts
 video/clips/
 video/sub_images/
+video/scene_04_frames/
+video/verification_frames/
 video/audio/
 video/*.txt
 video/unsubbed_video.mp4

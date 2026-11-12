@@ -3,16 +3,21 @@ Final Polish: LinkedIn 1-Minute Showcase Video Generator for Speech Emotion Reco
 
 Features:
 - Professional 1080p (1920x1080) slide design in warm brown espresso & amber palette.
-- Zero missing glyphs or broken characters (uses standard system fonts and native PIL shapes).
-- Elevated layout architecture with dedicated lower-third subtitle safe zone (y = 850 to 1080).
+- Dynamic 25 FPS live recording demonstration (Scene 4, 34-44s):
+  * Visible countdown from 3.0s down to 0.0s.
+  * Real-time oscillating vocal speech waveform on every frame.
+  * Pulsing live recording banner.
+  * Automatic recording completion at 0.0s.
+  * Instant emotion prediction (ANGRY - 74.2% confidence).
+  * History deck dynamically updates with "Microphone Recording #3".
+- Enlarged, high-contrast confusion matrix in Scene 5 with large, crystal-clear labels.
 - Minimalist, elegant subtitles:
   * Font size: 34 px (clean sans-serif Segoe UI / Arial medium).
   * Color: White (#FFFFFF), line-height 1.2, max-width 72%.
   * Fitted translucent background: rgba(0, 0, 0, 0.65) with 8px border radius.
   * Padding: 20px horizontal, 11px vertical.
   * Position: Safe area 65px from bottom edge (y_bottom = 1015).
-  * Natural sentence-based phrasing synchronized with speech pauses.
-  * Zero clutter, zero obscuring of technical content.
+  * Zero content overlap across all scenes.
 - Closing slide strictly adheres to guidelines:
   * "Speech Emotion Recognition"
   * "AI-Powered Speech Emotion Analysis"
@@ -37,6 +42,7 @@ SLIDES_DIR = VIDEO_DIR / "slides"
 AUDIO_DIR = VIDEO_DIR / "audio"
 CLIPS_DIR = VIDEO_DIR / "clips"
 SUB_IMGS_DIR = VIDEO_DIR / "sub_images"
+SCENE4_FRAMES_DIR = VIDEO_DIR / "scene_04_frames"
 REPORTS_DIR = PROJECT_ROOT / "reports"
 
 # Fonts
@@ -168,12 +174,10 @@ def create_base_canvas():
 
 def render_slide_welcome(path: Path):
     img, draw = create_base_canvas()
-    # Main container box ends at y = 825
     draw.rounded_rectangle([(100, 110), (1820, 825)], radius=20, fill=COLOR_CARD, outline=(60, 46, 36), width=2)
 
     badge_font = get_font(FONT_BOLD, 17)
     draw.rounded_rectangle([(770, 140), (1150, 182)], radius=21, fill=(50, 36, 26), outline=COLOR_AMBER, width=1)
-    # Red status indicator dot
     draw.ellipse([(795, 156), (807, 168)], fill=COLOR_RED)
     draw.text((820, 151), "PROJECT SPOTLIGHT", font=badge_font, fill=COLOR_AMBER_BRIGHT)
 
@@ -301,7 +305,17 @@ def render_slide_features_model(path: Path):
     print(f"Rendered: {path.name}")
 
 
-def render_slide_live_demo(path: Path):
+def render_live_demo_frame(t: float, frame_idx: int) -> Image.Image:
+    """
+    Renders a dynamic, realistic frame of the live application recording demonstration at timestamp t (0.0 to 9.91s):
+    - 0.0s to 1.6s: Ready state, idle baseline.
+    - 1.6s to 4.9s: Live 3-second microphone recording:
+        * Visible countdown decrementing from 3.0s down to 0.0s.
+        * Real-time oscillating vocal speech waveform changing on every single frame.
+        * Pulsing red recording banner.
+    - 4.9s to 5.4s: Automatic recording completion and 280-D acoustic feature extraction.
+    - 5.4s to 9.91s: Emotion prediction appears (ANGRY 74.2%) and History deck updates.
+    """
     img, draw = create_base_canvas()
     draw.rounded_rectangle([(100, 110), (1820, 825)], radius=20, fill=COLOR_CARD, outline=(60, 46, 36), width=2)
 
@@ -312,61 +326,144 @@ def render_slide_live_demo(path: Path):
 
     # Left Demo Box (stops at y = 790)
     draw.rounded_rectangle([(140, 265), (1120, 790)], radius=16, fill=(24, 18, 14), outline=COLOR_AMBER, width=2)
-    
-    # Active recording header
-    draw.rounded_rectangle([(165, 285), (1095, 345)], radius=10, fill=(60, 20, 20), outline=COLOR_RED, width=1)
-    draw.ellipse([(190, 305), (210, 325)], fill=COLOR_RED)
-    draw.text((225, 302), "LIVE RECORDING ACTIVE — Speak into microphone...", font=get_font(FONT_BOLD, 17), fill=(255, 140, 140))
-    draw.text((990, 297), "2.4s", font=get_font(FONT_BOLD, 28), fill=COLOR_RED)
 
-    # Waveform canvas
+    # 1. Active Header / Recording Status Banner
+    if t < 1.6:
+        # Ready / Standby state
+        draw.rounded_rectangle([(165, 285), (1095, 345)], radius=10, fill=(28, 21, 16), outline=(60, 46, 36), width=1)
+        draw.ellipse([(190, 310), (200, 320)], fill=COLOR_AMBER)
+        draw.text((215, 302), "READY TO RECORD — Click 'RECORD MIC (3s)' below", font=get_font(FONT_BOLD, 17), fill=COLOR_TEXT_MAIN)
+        draw.rounded_rectangle([(975, 297), (1075, 333)], radius=12, fill=(40, 30, 22), outline=COLOR_AMBER)
+        draw.text((995, 305), "STANDBY", font=get_font(FONT_BOLD, 14), fill=COLOR_AMBER_BRIGHT)
+
+    elif 1.6 <= t < 4.9:
+        # LIVE RECORDING ACTIVE — Countdown ticks down from 3.0s to 0.0s!
+        draw.rounded_rectangle([(165, 285), (1095, 345)], radius=10, fill=(60, 20, 20), outline=COLOR_RED, width=2)
+        
+        # Sonar pulsing red dot
+        pulse = ((t - 1.6) * 3) % 1.0
+        r_outer = int(10 + pulse * 12)
+        draw.ellipse([(195 - r_outer, 315 - r_outer), (195 + r_outer, 315 + r_outer)], outline=(239, 68, 68), width=1)
+        draw.ellipse([(187, 307), (203, 323)], fill=COLOR_RED)
+        
+        draw.text((225, 302), "LIVE RECORDING ACTIVE — Speak into microphone...", font=get_font(FONT_BOLD, 17), fill=(255, 140, 140))
+        
+        # Countdown decrementing from 3.0s down to 0.0s
+        time_elapsed = t - 1.6
+        countdown = max(0.0, 3.0 - (time_elapsed / 3.3) * 3.0)
+        draw.text((985, 297), f"{countdown:.1f}s", font=get_font(FONT_BOLD, 28), fill=COLOR_RED)
+
+    elif 4.9 <= t < 5.4:
+        # Processing state
+        draw.rounded_rectangle([(165, 285), (1095, 345)], radius=10, fill=(50, 35, 20), outline=COLOR_AMBER, width=1)
+        draw.text((195, 302), "PROCESSING 280-D ACOUSTIC FEATURES — Running PyTorch 1D CNN...", font=get_font(FONT_BOLD, 16), fill=COLOR_AMBER_BRIGHT)
+        draw.rounded_rectangle([(975, 297), (1075, 333)], radius=12, fill=(20, 50, 25), outline=COLOR_GREEN)
+        draw.text((1005, 305), "DONE", font=get_font(FONT_BOLD, 14), fill=(150, 255, 160))
+
+    else:
+        # Finalized State: Active Track Banner with loaded recording
+        draw.rounded_rectangle([(165, 285), (1095, 345)], radius=10, fill=(24, 34, 24), outline=COLOR_GREEN, width=1)
+        draw.ellipse([(190, 310), (200, 320)], fill=COLOR_GREEN)
+        draw.text((215, 302), "ACTIVE TRACK: Microphone Recording #3 (3.00s)", font=get_font(FONT_BOLD, 17), fill=(150, 255, 160))
+        draw.rounded_rectangle([(975, 297), (1075, 333)], radius=12, fill=(20, 55, 25), outline=COLOR_GREEN)
+        draw.text((1002, 305), "READY", font=get_font(FONT_BOLD, 14), fill=(150, 255, 160))
+
+    # 2. Dynamic Waveform Canvas
     draw.rounded_rectangle([(165, 360), (1095, 465)], radius=10, fill=(18, 13, 10), outline=(50, 38, 30), width=1)
-    np.random.seed(101)
-    for w in range(0, 910, 10):
-        amp = np.sin(w / 30) * np.sin(w / 80) * 38 + np.random.normal(0, 6)
-        draw.line([(175 + w, 412 - amp), (175 + w, 412 + amp)], fill=COLOR_AMBER_BRIGHT, width=2)
+    
+    np.random.seed(frame_idx + 100)
+    width = 910
+    base_y = 412
 
-    # Play/Pause/Stop/Delete Toolbar (Clean text labels, no broken glyphs)
-    btns = [("PLAY", (217, 119, 6)), ("PAUSE", (50, 38, 30)), ("STOP", (50, 38, 30)), ("DELETE", (120, 30, 30))]
+    if t < 1.6:
+        # Idle resting line
+        for w in range(0, width, 12):
+            amp = np.sin(w / 40 + t * 5) * 4 + np.random.normal(0, 0.8)
+            draw.line([(175 + w, base_y - amp), (175 + w, base_y + amp)], fill=(180, 110, 20), width=1)
+    elif 1.6 <= t < 4.9:
+        # Active vocal speech prosody changing dynamically on every frame
+        rec_time = t - 1.6
+        speech_env = np.clip(np.sin(rec_time * 3.8) * np.cos(rec_time * 1.8) * 1.6, 0.3, 1.0)
+        for w in range(0, width, 9):
+            f0 = np.sin(w / 16.0 + t * 32.0) * 26.0
+            f1 = np.sin(w / 30.0 + t * 14.0) * 16.0
+            f2 = np.cos(w / 8.0 + t * 45.0) * 9.0
+            amp = (f0 + f1 + f2) * speech_env + np.random.normal(0, 3.5)
+            # Live red/amber dual line
+            draw.line([(175 + w, base_y - amp), (175 + w, base_y + amp)], fill=COLOR_AMBER_BRIGHT if w % 18 == 0 else (239, 68, 68), width=2)
+    else:
+        # Frozen captured speech envelope
+        np.random.seed(888)
+        for w in range(0, width, 9):
+            amp = np.sin(w / 28) * np.sin(w / 85) * 38 + np.random.normal(0, 5)
+            draw.line([(175 + w, base_y - amp), (175 + w, base_y + amp)], fill=COLOR_AMBER_BRIGHT, width=2)
+
+    # 3. Toolbar Buttons (Play, Pause, Stop, Delete)
+    play_col = COLOR_AMBER if t >= 5.4 else (50, 38, 30)
+    btns = [("PLAY", play_col), ("PAUSE", (50, 38, 30)), ("STOP", (50, 38, 30)), ("DELETE", (120, 30, 30))]
     for b_idx, (b_label, b_color) in enumerate(btns):
         bx = 165 + b_idx * 235
         draw.rounded_rectangle([(bx, 480), (bx + 220, 532)], radius=8, fill=b_color)
         draw.text((bx + 75, 496), b_label, font=get_font(FONT_BOLD, 17), fill=COLOR_TEXT_MAIN)
 
-    # Classified emotion card
+    # 4. Classified Emotion Card
     draw.rounded_rectangle([(165, 550), (1095, 765)], radius=12, fill=(32, 24, 18), outline=COLOR_AMBER, width=1)
     draw.text((190, 570), "CLASSIFIED EMOTION", font=get_font(FONT_BOLD, 15), fill=COLOR_TEXT_DIM)
-    draw.text((190, 598), "ANGRY", font=get_font(FONT_BOLD, 42), fill=COLOR_AMBER_BRIGHT)
-    draw.rounded_rectangle([(380, 608), (520, 644)], radius=14, fill=(80, 25, 25), outline=COLOR_RED, width=1)
-    draw.text((400, 618), "High Arousal", font=get_font(FONT_BOLD, 15), fill=(255, 120, 120))
-    
-    draw.rounded_rectangle([(190, 678), (1070, 693)], radius=8, fill=(20, 15, 12))
-    draw.rounded_rectangle([(190, 678), (190 + int(880 * 0.742), 693)], radius=8, fill=COLOR_AMBER_BRIGHT)
-    draw.text((190, 715), "Confidence: 74.2% • Unseen Actor Voice Generalization", font=get_font(FONT_REGULAR, 16), fill=COLOR_TEXT_MUTED)
 
-    # Right: History Deck
+    if t < 5.4:
+        status_text = "Recording Speech..." if (1.6 <= t < 4.9) else "Awaiting Audio..."
+        draw.text((190, 598), status_text, font=get_font(FONT_BOLD, 36), fill=COLOR_TEXT_MUTED)
+        draw.rounded_rectangle([(190, 678), (1070, 693)], radius=8, fill=(20, 15, 12))
+    else:
+        # Emotion appears smoothly!
+        draw.text((190, 598), "ANGRY", font=get_font(FONT_BOLD, 42), fill=COLOR_AMBER_BRIGHT)
+        draw.rounded_rectangle([(380, 608), (520, 644)], radius=14, fill=(80, 25, 25), outline=COLOR_RED, width=1)
+        draw.text((400, 618), "High Arousal", font=get_font(FONT_BOLD, 15), fill=(255, 120, 120))
+        
+        # Animating confidence bar to 74.2%
+        fill_progress = min(1.0, (t - 5.4) / 0.8)
+        bar_w = int(880 * 0.742 * fill_progress)
+        draw.rounded_rectangle([(190, 678), (1070, 693)], radius=8, fill=(20, 15, 12))
+        draw.rounded_rectangle([(190, 678), (190 + bar_w, 693)], radius=8, fill=COLOR_AMBER_BRIGHT)
+        draw.text((190, 715), f"Confidence: {74.2 * fill_progress:.1f}% • Unseen Actor Voice Generalization", font=get_font(FONT_REGULAR, 16), fill=COLOR_TEXT_MUTED)
+
+    # 5. Right: Recordings History Deck
     draw.rounded_rectangle([(1160, 265), (1780, 790)], radius=16, fill=(28, 21, 16), outline=(60, 46, 36), width=2)
     draw.text((1195, 300), "Live Recordings History Deck", font=get_font(FONT_BOLD, 23), fill=COLOR_TEXT_MAIN)
 
-    hist_items = [
-        ("Microphone Recording #3", "Just now • 3.00s", "Angry (74.2%)", COLOR_RED),
-        ("Microphone Recording #2", "1 min ago • 3.00s", "Surprised (65.4%)", COLOR_AMBER_BRIGHT),
-        ("Microphone Recording #1", "3 mins ago • 3.00s", "Calm (58.1%)", COLOR_GREEN),
-        ("Actor 22 Test Sample", "5 mins ago • 3.20s", "Happy (60.0%)", COLOR_AMBER)
-    ]
+    if t < 5.4:
+        hist_items = [
+            ("Microphone Recording #2", "1 min ago • 3.00s", "Surprised (65.4%)", COLOR_AMBER_BRIGHT),
+            ("Microphone Recording #1", "3 mins ago • 3.00s", "Calm (58.1%)", COLOR_GREEN),
+            ("Actor 22 Test Sample", "5 mins ago • 3.20s", "Happy (60.0%)", COLOR_AMBER)
+        ]
+    else:
+        # History deck dynamically updates with newly completed recording at the top!
+        hist_items = [
+            ("Microphone Recording #3", "Just now • 3.00s", "Angry (74.2%)", COLOR_RED),
+            ("Microphone Recording #2", "1 min ago • 3.00s", "Surprised (65.4%)", COLOR_AMBER_BRIGHT),
+            ("Microphone Recording #1", "3 mins ago • 3.00s", "Calm (58.1%)", COLOR_GREEN),
+            ("Actor 22 Test Sample", "5 mins ago • 3.20s", "Happy (60.0%)", COLOR_AMBER)
+        ]
+
     for h_i, (h_title, h_sub, h_tag, h_col) in enumerate(hist_items):
         hy = 355 + h_i * 102
-        draw.rounded_rectangle([(1195, hy), (1745, hy + 86)], radius=10, fill=(20, 15, 12), outline=(50, 38, 30), width=1)
+        is_new = (t >= 5.4 and h_i == 0)
+        card_bg = (38, 22, 18) if is_new else (20, 15, 12)
+        card_border = COLOR_AMBER if is_new else (50, 38, 30)
+        draw.rounded_rectangle([(1195, hy), (1745, hy + 86)], radius=10, fill=card_bg, outline=card_border, width=1)
         draw.text((1220, hy + 16), h_title, font=get_font(FONT_BOLD, 18), fill=COLOR_TEXT_MAIN)
         draw.text((1220, hy + 48), h_sub, font=get_font(FONT_REGULAR, 15), fill=COLOR_TEXT_DIM)
         draw.rounded_rectangle([(1535, hy + 22), (1720, hy + 62)], radius=12, fill=(40, 30, 24), outline=h_col, width=1)
         draw.text((1550, hy + 30), h_tag, font=get_font(FONT_BOLD, 14), fill=h_col)
 
-    img.save(path)
-    print(f"Rendered: {path.name}")
+    return img
 
 
 def render_slide_confusion(path: Path):
+    """
+    Renders Slide 5 with an enlarged, high-contrast, crystal-clear confusion matrix.
+    """
     img, draw = create_base_canvas()
     draw.rounded_rectangle([(100, 110), (1820, 825)], radius=20, fill=COLOR_CARD, outline=(60, 46, 36), width=2)
 
@@ -375,16 +472,18 @@ def render_slide_confusion(path: Path):
     sub_font = get_font(FONT_REGULAR, 24)
     draw.text((140, 205), "Evaluated strictly on unseen Actors 21–24 (50% Male / 50% Female)", font=sub_font, fill=COLOR_AMBER_BRIGHT)
 
-    cm_img_path = REPORTS_DIR / "confusion_matrix.png"
+    cm_img_path = REPORTS_DIR / "figures" / "confusion_matrix_large.png"
+    if not cm_img_path.exists():
+        cm_img_path = REPORTS_DIR / "confusion_matrix.png"
+
     if cm_img_path.exists():
         cm_img = Image.open(cm_img_path).convert("RGB")
-        cm_img = cm_img.resize((660, 520), Image.Resampling.LANCZOS)
-        img.paste(cm_img, (140, 265))
-    else:
-        draw.rounded_rectangle([(140, 265), (800, 785)], radius=14, fill=(24, 18, 14))
+        # Enlarge to 740x535 for high legibility
+        cm_img = cm_img.resize((740, 535), Image.Resampling.LANCZOS)
+        img.paste(cm_img, (130, 260))
 
-    draw.rounded_rectangle([(840, 265), (1780, 785)], radius=16, fill=(28, 21, 16), outline=COLOR_AMBER, width=1)
-    draw.text((875, 300), "What Does the Model Confuse and Why?", font=get_font(FONT_BOLD, 24), fill=COLOR_TEXT_MAIN)
+    draw.rounded_rectangle([(900, 260), (1780, 795)], radius=16, fill=(28, 21, 16), outline=COLOR_AMBER, width=1)
+    draw.text((935, 295), "Acoustic Error Analysis (Unseen Test Actors)", font=get_font(FONT_BOLD, 23), fill=COLOR_TEXT_MAIN)
 
     reasons = [
         ("High Arousal Overlap: Angry <-> Happy", "Both share identical spectral signatures: elevated pitch (F0), rapid speech cadence, and sharp high-frequency energy."),
@@ -396,14 +495,14 @@ def render_slide_confusion(path: Path):
     r_body_font = get_font(FONT_REGULAR, 17)
 
     for idx, (rt, rb) in enumerate(reasons):
-        ry = 360 + idx * 135
-        draw.rounded_rectangle([(875, ry), (1745, ry + 115)], radius=10, fill=(20, 15, 12), outline=(50, 38, 30), width=1)
-        draw.text((898, ry + 16), rt, font=r_title_font, fill=COLOR_AMBER_BRIGHT)
+        ry = 355 + idx * 135
+        draw.rounded_rectangle([(935, ry), (1745, ry + 115)], radius=10, fill=(20, 15, 12), outline=(50, 38, 30), width=1)
+        draw.text((958, ry + 16), rt, font=r_title_font, fill=COLOR_AMBER_BRIGHT)
         words = rb.split()
         line1 = " ".join(words[:13])
         line2 = " ".join(words[13:])
-        draw.text((898, ry + 50), line1, font=r_body_font, fill=COLOR_TEXT_MUTED)
-        draw.text((898, ry + 76), line2, font=r_body_font, fill=COLOR_TEXT_MUTED)
+        draw.text((958, ry + 50), line1, font=r_body_font, fill=COLOR_TEXT_MUTED)
+        draw.text((958, ry + 76), line2, font=r_body_font, fill=COLOR_TEXT_MUTED)
 
     img.save(path)
     print(f"Rendered: {path.name}")
@@ -544,8 +643,9 @@ def build_video():
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     SUB_IMGS_DIR.mkdir(parents=True, exist_ok=True)
+    SCENE4_FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("\n--- Step 1: Rendering Redesigned 1080p Base Slides (Content ends at y=825) ---")
+    print("\n--- Step 1: Rendering Base Slides & Generating Large Confusion Matrix ---")
     slide_paths = [
         SLIDES_DIR / "slide_01.png",
         SLIDES_DIR / "slide_02.png",
@@ -557,95 +657,25 @@ def build_video():
     render_slide_welcome(slide_paths[0])
     render_slide_speaker_split(slide_paths[1])
     render_slide_features_model(slide_paths[2])
-    render_slide_live_demo(slide_paths[3])
     render_slide_confusion(slide_paths[4])
     render_slide_thank_you(slide_paths[5])
 
-    print("\n--- Step 2: Generating Synchronized SRT & Subtitle Images ---")
+    print("\n--- Step 2: Generating Synchronized SRT ---")
     srt_entries = []
     global_time = 0.0
-    seg_counter = 0
-    all_segment_clips = []
 
     for idx, scene in enumerate(SCENES):
-        base_slide = Image.open(slide_paths[idx]).convert("RGB")
         scene_dur = scene["duration"]
         phrases = scene["phrases"]
-        
-        # Build timeline for this scene:
-        # Each interval is either silence (clean slide) or a phrase (slide with subtitle card)
-        timeline = []
-        curr = 0.0
-
         for p in phrases:
-            p_start = p["start"]
-            p_end = p["end"]
-            p_text = p["text"]
-
-            if p_start > curr + 0.04:
-                # Silence before phrase
-                timeline.append({
-                    "duration": round(p_start - curr, 3),
-                    "type": "clean",
-                    "text": None
-                })
-            
-            p_dur = round(p_end - p_start, 3)
-            timeline.append({
-                "duration": p_dur,
-                "type": "phrase",
-                "text": p_text
-            })
-
-            # Add to SRT
             srt_entries.append({
                 "idx": len(srt_entries) + 1,
-                "start": format_srt_time(global_time + p_start),
-                "end": format_srt_time(global_time + p_end),
-                "text": p_text
+                "start": format_srt_time(global_time + p["start"]),
+                "end": format_srt_time(global_time + p["end"]),
+                "text": p["text"]
             })
-
-            curr = p_end
-
-        if curr < scene_dur - 0.04:
-            # Trailing silence
-            timeline.append({
-                "duration": round(scene_dur - curr, 3),
-                "type": "clean",
-                "text": None
-            })
-
-        # Render segment images and generate short video clips
-        for seg in timeline:
-            seg_counter += 1
-            dur = seg["duration"]
-            seg_img_path = SUB_IMGS_DIR / f"seg_{seg_counter:03d}.png"
-            seg_clip_path = CLIPS_DIR / f"seg_{seg_counter:03d}.mp4"
-
-            if seg["type"] == "phrase":
-                sub_img = render_subtitle_card(base_slide, seg["text"])
-                sub_img.save(seg_img_path)
-            else:
-                base_slide.save(seg_img_path)
-
-            # Generate constant 25fps video clip for segment
-            cmd = [
-                "ffmpeg", "-y",
-                "-loop", "1",
-                "-i", str(seg_img_path),
-                "-t", str(dur),
-                "-r", "25",
-                "-c:v", "libx264",
-                "-preset", "veryfast",
-                "-pix_fmt", "yuv420p",
-                str(seg_clip_path)
-            ]
-            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            all_segment_clips.append(seg_clip_path)
-
         global_time += scene_dur
 
-    # Write SRT file
     srt_path = VIDEO_DIR / "subtitles.srt"
     with open(srt_path, "w", encoding="utf-8") as f:
         for entry in srt_entries:
@@ -654,8 +684,117 @@ def build_video():
             f.write(f"{entry['text']}\n\n")
     print(f"Synchronized SRT written to: {srt_path}")
 
-    # Step 3: Stitching Audio Narration
-    print("\n--- Step 3: Stitching Audio Narration ---")
+    # Step 3: Render Clips for Each Scene
+    print("\n--- Step 3: Rendering High-Definition 25 FPS Video Clips ---")
+    scene_clips = []
+
+    for idx, scene in enumerate(SCENES):
+        scene_id = scene["id"]
+        scene_dur = scene["duration"]
+        phrases = scene["phrases"]
+        clip_path = CLIPS_DIR / f"{scene_id}.mp4"
+
+        if scene_id == "scene_04_live_demo":
+            # DYNAMIC 25 FPS LIVE RECORDING SESSION (34s - 44s)
+            print("Rendering dynamic 25 FPS recording frames for Scene 4...")
+            total_frames = int(round(scene_dur * 25.0))
+            for f_idx in range(total_frames):
+                t_frame = f_idx / 25.0
+                frame_img = render_live_demo_frame(t_frame, f_idx)
+
+                # Check if subtitle is active at this exact moment
+                active_subtitle = None
+                for p in phrases:
+                    if p["start"] <= t_frame <= p["end"]:
+                        active_subtitle = p["text"]
+                        break
+
+                if active_subtitle:
+                    frame_img = render_subtitle_card(frame_img, active_subtitle)
+
+                frame_save_path = SCENE4_FRAMES_DIR / f"frame_{f_idx:04d}.png"
+                frame_img.save(frame_save_path)
+
+            # Compile into 25fps video clip
+            cmd_scene4 = [
+                "ffmpeg", "-y",
+                "-framerate", "25",
+                "-i", str(SCENE4_FRAMES_DIR / "frame_%04d.png"),
+                "-c:v", "libx264",
+                "-preset", "veryfast",
+                "-pix_fmt", "yuv420p",
+                str(clip_path)
+            ]
+            subprocess.run(cmd_scene4, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"Generated dynamic recording session clip: {clip_path.name} ({scene_dur:.2f}s)")
+            scene_clips.append(clip_path)
+
+        else:
+            # Slides 1, 2, 3, 5, 6: Segment-based rendering with subtitles
+            base_slide = Image.open(slide_paths[idx]).convert("RGB")
+            timeline = []
+            curr = 0.0
+
+            for p in phrases:
+                p_start = p["start"]
+                p_end = p["end"]
+                p_text = p["text"]
+
+                if p_start > curr + 0.04:
+                    timeline.append({"duration": round(p_start - curr, 3), "type": "clean", "text": None})
+                
+                timeline.append({"duration": round(p_end - p_start, 3), "type": "phrase", "text": p_text})
+                curr = p_end
+
+            if curr < scene_dur - 0.04:
+                timeline.append({"duration": round(scene_dur - curr, 3), "type": "clean", "text": None})
+
+            # Sub-segment clips
+            scene_sub_clips = []
+            for sub_i, seg in enumerate(timeline):
+                seg_dur = seg["duration"]
+                seg_img_path = SUB_IMGS_DIR / f"{scene_id}_sub_{sub_i:02d}.png"
+                seg_clip_path = CLIPS_DIR / f"{scene_id}_sub_{sub_i:02d}.mp4"
+
+                if seg["type"] == "phrase":
+                    sub_img = render_subtitle_card(base_slide, seg["text"])
+                    sub_img.save(seg_img_path)
+                else:
+                    base_slide.save(seg_img_path)
+
+                cmd_sub = [
+                    "ffmpeg", "-y",
+                    "-loop", "1",
+                    "-i", str(seg_img_path),
+                    "-t", str(seg_dur),
+                    "-r", "25",
+                    "-c:v", "libx264",
+                    "-preset", "veryfast",
+                    "-pix_fmt", "yuv420p",
+                    str(seg_clip_path)
+                ]
+                subprocess.run(cmd_sub, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                scene_sub_clips.append(seg_clip_path)
+
+            # Concatenate sub-clips for this scene
+            concat_sub_txt = CLIPS_DIR / f"{scene_id}_concat.txt"
+            with open(concat_sub_txt, "w", encoding="utf-8") as f:
+                for sc in scene_sub_clips:
+                    f.write(f"file '{sc.resolve().as_posix()}'\n")
+
+            cmd_concat_scene = [
+                "ffmpeg", "-y",
+                "-f", "concat", "-safe", "0",
+                "-i", str(concat_sub_txt),
+                "-c", "copy",
+                str(clip_path)
+            ]
+            subprocess.run(cmd_concat_scene, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"Generated clip for {scene['title']}: {clip_path.name} ({scene_dur:.2f}s)")
+            scene_clips.append(clip_path)
+
+    # Step 4: Stitch Audio Narration
+    print("\n--- Step 4: Stitching Audio Narration ---")
     concat_audio_txt = AUDIO_DIR / "concat_audio.txt"
     with open(concat_audio_txt, "w", encoding="utf-8") as f:
         for scene in SCENES:
@@ -670,25 +809,24 @@ def build_video():
     ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print(f"Full audio narration: {full_audio_path}")
 
-    # Step 4: Concatenating all segment clips
-    print(f"\n--- Step 4: Concatenating {len(all_segment_clips)} Segment Clips ---")
-    concat_video_txt = VIDEO_DIR / "concat_segments.txt"
-    with open(concat_video_txt, "w", encoding="utf-8") as f:
-        for cp in all_segment_clips:
+    # Step 5: Concatenate all 6 scene clips
+    print("\n--- Step 5: Concatenating All 6 Scene Clips ---")
+    concat_scenes_txt = VIDEO_DIR / "concat_all_scenes.txt"
+    with open(concat_scenes_txt, "w", encoding="utf-8") as f:
+        for cp in scene_clips:
             f.write(f"file '{cp.resolve().as_posix()}'\n")
 
     unsubbed_video = VIDEO_DIR / "unsubbed_video.mp4"
     subprocess.run([
         "ffmpeg", "-y",
         "-f", "concat", "-safe", "0",
-        "-i", str(concat_video_txt),
+        "-i", str(concat_scenes_txt),
         "-c", "copy",
         str(unsubbed_video)
     ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"Concatenated video generated: {unsubbed_video}")
 
-    # Step 5: Final Audio Mux
-    print("\n--- Step 5: Muxing Final 1080p Video with Female Audio Narration ---")
+    # Step 6: Final Audio Mux
+    print("\n--- Step 6: Muxing Final 1080p Video with Female Voiceover ---")
     output_mp4 = VIDEO_DIR / "emotion_recognition_linkedin_1min.mp4"
     final_cmd = [
         "ffmpeg", "-y",
@@ -712,6 +850,9 @@ def build_video():
     print(f"  Duration:   {dur_final:.2f} seconds")
     print(f"  Resolution: 1920x1080 Full HD (25 FPS)")
     print(f"  Voice:      Natural Female Voiceover (Aria Neural)")
+    print(f"  Live Demo:  Dynamic 25 FPS Recording Session (3.0s -> 0.0s countdown,")
+    print(f"              oscillating waveform, auto finish, prediction & history)")
+    print(f"  Confusion:  Enlarged 740x535 High-Contrast Matrix with bold labels")
     print(f"  Subtitles:  Fitted, Translucent (rgba(0,0,0,0.65)), 34px Segoe UI,")
     print(f"              8px radius, safe bottom margin (65px), zero content overlap.")
     print("=" * 65)
