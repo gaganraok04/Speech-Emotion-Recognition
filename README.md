@@ -1,11 +1,54 @@
-# Emotion Recognition from Speech (SER)
+# Speech Emotion Recognition (SER)
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
-[![Librosa](https://img.shields.io/badge/Librosa-Audio%20Feature%20Extraction-brightgreen.svg)](https://librosa.org/)
-[![Web Demo](https://img.shields.io/badge/Demo-Vanilla%20HTML5%20%2F%20WebAudio-success.svg)](#-interactive-web-application--player-toolbar)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-REST%20API-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Librosa](https://img.shields.io/badge/Librosa-Acoustic%20Analysis-2D72D9)](https://librosa.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An end-to-end Speech Emotion Recognition (SER) deep learning system built with **PyTorch** and **Librosa**, featuring **strict speaker-independent train/validation/test partitioning**, comprehensive acoustic feature extraction (MFCCs, Deltas, Delta-Deltas, Chroma, Spectral Contrast, RMS), per-class performance evaluation, and an interactive **HTML5/CSS3/JavaScript Web UI** deployable to **GitHub Pages**.
+An end-to-end Speech Emotion Recognition system engineered in **PyTorch**, **Librosa**, and **FastAPI**, featuring **strict speaker-independent dataset partitioning**, a **280-dimensional acoustic prosody feature pipeline**, real-time **1D Convolutional Neural Network** inference, and an interactive **HTML5/WebAudio application**.
+
+---
+
+## 📸 Real-Time Application & Acoustic Visualizations
+
+### Figure 1: Real-Time Working Project — Interactive Web UI & Live 3-Second Recording
+The client-side interface includes real-time microphone capture with live countdown feedback (`3.0s` &rarr; `0.0s`), dynamic waveform animation, and playback controls.
+
+<p align="center">
+  <img src="reports/figures/live_recording_session.png" alt="Figure 1: Live 3-Second Recording Session" width="900" />
+</p>
+<p align="center"><em>Figure 1: Live 3-second recording session showing active audio oscillation, countdown ticker, and audio toolbar.</em></p>
+
+---
+
+### Figure 2: Live Emotion Prediction & Local Recordings History Deck
+Upon recording completion, the model extracts acoustic features, evaluates class probabilities, and displays the classified emotion alongside the updated history deck.
+
+<p align="center">
+  <img src="reports/figures/live_prediction_history.png" alt="Figure 2: Real-Time Prediction & History Deck" width="900" />
+</p>
+<p align="center"><em>Figure 2: Inference result card with confidence metric, vocal arousal badge, and persistent recording history item.</em></p>
+
+---
+
+### Figure 3: Acoustic Prosody Comparison Across Emotional Expressions
+Log-frequency mel-spectrograms highlight distinct acoustic signatures across speech states, contrasting energy distribution, pitch shifts, and harmonic resonances.
+
+<p align="center">
+  <img src="reports/figures/mel_spectrograms_comparison.png" alt="Figure 3: Mel-Spectrogram Acoustic Prosody Comparison" width="900" />
+</p>
+<p align="center"><em>Figure 3: Log-mel spectrograms demonstrating energy concentration differences between calm, angry, happy, and sad vocalizations.</em></p>
+
+---
+
+### Figure 4: Acoustic Confusion Matrix on Unseen Test Speakers
+Evaluated on completely unseen test speakers (Actors 21–24, 50% Male / 50% Female) to prevent acoustic identity memorization.
+
+<p align="center">
+  <img src="reports/figures/confusion_matrix_large.png" alt="Figure 4: Acoustic Confusion Matrix on Unseen Test Speakers" width="750" />
+</p>
+<p align="center"><em>Figure 4: High-contrast 8&times;8 confusion matrix detailing true vs. predicted emotion distributions across unseen voices.</em></p>
 
 ---
 
@@ -13,215 +56,259 @@ An end-to-end Speech Emotion Recognition (SER) deep learning system built with *
 
 > **"Split by speaker, not at random — otherwise the model learns voices instead of emotions and your score is fiction."**
 
-### Why Random Splitting Causes Fictitious Results
-In Speech Emotion Recognition, randomly splitting audio clips creates severe **data leakage**:
-- Every human speaker has a unique vocal anatomy: vocal tract length, fundamental pitch range ($F_0$), formant frequencies, and idiosyncratic timbral qualities.
-- If clips from the same actor appear in both train and test splits, the convolutional network does not learn emotional prosody. Instead, it acts as a **speaker identifier** (e.g., memorizing that *"Speaker 14's deep voice usually says happy lines in this pitch"*).
-- Random split models easily report 85%–95% test accuracy in papers and assignments, but **completely collapse on real unseen voices**.
+In speech classification, random splitting creates critical **data leakage**:
+- Individual vocal traits (vocal tract length, baseline pitch $F_0$, formant spacing) remain constant for a given speaker across all recorded utterances.
+- Random splitting allows audio from the same voice into both training and testing sets, causing models to memorize voice signatures rather than emotional expressions.
+- While random-split models may report inflated accuracies (85%+), they often fail on unfamiliar speakers.
 
-### Our Rigorous Partitioning Strategy
-We partition the 24 professional actors of the **RAVDESS** dataset strictly by Actor ID:
+### Partitioning Strategy (RAVDESS Benchmark)
 
-| Split | Actor IDs | Count | Gender Ratio | Percentage | Purpose |
+| Split | Partition Criteria | Utterances | Gender Distribution | Ratio | Role |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Train** | Actors 01 to 16 | 960 clips | 8 Male / 8 Female | 66.7% | Feature learning & gradient updates |
-| **Validation** | Actors 17 to 20 | 240 clips | 2 Male / 2 Female | 16.7% | Early stopping & hyperparameter tuning |
-| **Test** | **Actors 21 to 24** | **240 clips** | **2 Male / 2 Female** | **16.7%** | **Strictly unseen benchmark voices** |
+| **Train** | Actors 01 &ndash; 16 | 960 clips | 8 Male / 8 Female | 66.7% | Representation learning |
+| **Validation** | Actors 17 &ndash; 20 | 240 clips | 2 Male / 2 Female | 16.7% | Early stopping & regularization |
+| **Test** | **Actors 21 &ndash; 24** | **240 clips** | **2 Male / 2 Female** | **16.7%** | **Unseen benchmark evaluation** |
 
-- **Zero Speaker Overlap**: Actors 21, 22, 23, and 24 are **never heard** during training or validation.
-- **Strict Gender Balance**: Exactly 50% Male and 50% Female in every split to prevent gender bias.
+Standardization (`StandardScaler`) is fitted strictly on the training partition and applied to validation and test sets without leakage.
 
 ---
 
-## 🎛️ Acoustic Feature Extraction Explained
+## 🎛️ 280-Dimensional Acoustic Feature Pipeline
 
-Speech emotion is conveyed primarily through **prosody** (pitch variations, cadence, energy, vocal tract resonance). We extract a comprehensive **280-dimensional acoustic feature vector** from each normalized audio clip:
+Each normalized 22,050 Hz audio clip is converted into a 280-dimensional prosodic vector:
 
-| Feature Component | Dimension | Extraction Method | Acoustic Meaning |
+| Feature Component | Dimension | Formulation | Acoustic Role |
 | :--- | :---: | :--- | :--- |
-| **MFCC Mean & Std** | 80 (40+40) | 40-band Mel filterbank across FFT frames | Spectral envelope & vocal tract shape (timbre). |
-| **Delta MFCC Mean & Std** | 80 (40+40) | 1st-order temporal derivative $\frac{\partial \text{MFCC}}{\partial t}$ | Speech velocity and pitch movement rate. |
-| **Delta-Delta MFCC Mean & Std** | 80 (40+40) | 2nd-order temporal derivative $\frac{\partial^2 \text{MFCC}}{\partial t^2}$ | Speech acceleration and prosodic transitions. |
-| **Chroma STFT Mean & Std** | 24 (12+12) | 12 pitch classes projected from STFT | Harmonic content, intonation, and pitch chroma. |
-| **Spectral Contrast Mean & Std** | 14 (7+7) | Energy diff between spectral peaks & valleys | Distinguishes clear speech from breathiness. |
-| **RMS Energy Mean & Std** | 2 (1+1) | Root-Mean-Square energy across frames | Vocal loudness and volume envelope dynamics. |
-| **Total** | **280** | Concatenated & Standard-Normalized | Full prosodic fingerprint of emotional speech. |
-
-> **Data Leakage Prevention in Preprocessing**: The `StandardScaler` is fitted **strictly on the Train split**, then used to transform the Validation and Test splits.
+| **MFCC Statistics** | 80 (40 mean + 40 std) | 40-band Mel-scale filterbanks | Vocal tract resonance and timbral envelope. |
+| **Delta MFCCs ($\Delta$)** | 80 (40 mean + 40 std) | $\partial(\text{MFCC}) / \partial t$ | Speech velocity and pitch trajectory changes. |
+| **Delta-Deltas ($\Delta^2$)** | 80 (40 mean + 40 std) | $\partial^2(\text{MFCC}) / \partial t^2$ | Prosodic acceleration and cadence transitions. |
+| **Chroma STFT** | 24 (12 mean + 12 std) | 12 pitch chroma bins | Harmonic structure and intonation contour. |
+| **Spectral Contrast** | 14 (7 mean + 7 std) | Peak vs. valley energy across 7 sub-bands | Distinguishes breathiness from vocal clarity. |
+| **RMS Energy** | 2 (1 mean + 1 std) | $\sqrt{\frac{1}{N}\sum x[n]^2}$ | Loudness envelope and dynamic intensity. |
+| **Total** | **280** | Concatenated summary vector | Global acoustic prosodic representation. |
 
 ---
 
-## 🧠 Model Architecture
+## 🧠 Deep 1D CNN Architecture
 
-The core model is a deep **1D Convolutional Neural Network (CNN)** (`src/model.py`):
-- **Conv1D Block 1**: 64 filters, kernel size 5, stride 1, BatchNorm, LeakyReLU(0.1), MaxPool1d(2), Dropout(0.25)
-- **Conv1D Block 2**: 128 filters, kernel size 5, stride 1, BatchNorm, LeakyReLU(0.1), MaxPool1d(2), Dropout(0.30)
-- **Conv1D Block 3**: 256 filters, kernel size 3, stride 1, BatchNorm, LeakyReLU(0.1), MaxPool1d(2), Dropout(0.35)
-- **Conv1D Block 4**: 256 filters, kernel size 3, stride 1, BatchNorm, LeakyReLU(0.1), Dropout(0.35)
-- **Global Average Pooling**: `AdaptiveAvgPool1d(1)` collapsing temporal dimension into invariant representations
-- **Dense Classifier**: Linear(256 $\rightarrow$ 128), BatchNorm1d, ReLU, Dropout(0.40), Linear(128 $\rightarrow$ 8 classes)
-- **Class-Weighted CrossEntropyLoss**: Balanced weighting to compensate for Neutral having 96 clips vs 192 clips for other emotions.
+The model uses a 1D Convolutional Neural Network designed for tabular and fixed-length acoustic representations:
 
----
-
-## 📊 Per-Class Performance & Honest Error Analysis
-
-### 1. Per-Class Results Table (Unseen Test Actors 21–24)
-
-| Emotion | Precision (%) | Recall (%) | F1-Score (%) | Support | Acoustic Profile |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Surprised** | **65.4%** | **53.1%** | **58.6%** | 32 | Sudden pitch rise, high fundamental frequency ($F_0$) |
-| **Fearful** | **52.4%** | **34.4%** | **41.5%** | 32 | High acoustic jitter, breathiness, vocal instability |
-| **Disgust** | **47.8%** | **34.4%** | **40.0%** | 32 | Low pitch, guttural resonances, harsh timbre |
-| **Angry** | **29.6%** | **50.0%** | **37.2%** | 32 | High energy, sharp onset, broad spectral dispersion |
-| **Calm** | **31.1%** | **43.8%** | **36.4%** | 32 | Soft volume, slow rate, relaxed vocal folds |
-| **Neutral** | **33.3%** | **37.5%** | **35.3%** | 16 | Moderate cadence, baseline spectral shape |
-| **Happy** | **31.0%** | **40.6%** | **35.1%** | 32 | Bright harmonics, fast tempo, elevated pitch |
-| **Sad** | **36.4%** | **12.5%** | **18.6%** | 32 | Monotone pitch, low energy, long pauses (confused with Calm/Neutral) |
-
-- **Overall Accuracy**: `38.33%` across 8 emotions on 100% unseen test actors (vs. 12.5% random baseline, representing true cross-speaker acoustic generalization).
-- **Macro Average F1**: `37.84%`
+- **Conv1D Block 1**: 64 filters, kernel size 5, stride 1, BatchNorm, LeakyReLU(0.1), MaxPool1d(2), Spatial Dropout(0.25)
+- **Conv1D Block 2**: 128 filters, kernel size 5, stride 1, BatchNorm, LeakyReLU(0.1), MaxPool1d(2), Spatial Dropout(0.30)
+- **Conv1D Block 3**: 256 filters, kernel size 3, stride 1, BatchNorm, LeakyReLU(0.1), MaxPool1d(2), Spatial Dropout(0.35)
+- **Conv1D Block 4**: 256 filters, kernel size 3, stride 1, BatchNorm, LeakyReLU(0.1), Spatial Dropout(0.35)
+- **Pooling**: Adaptive Average Pooling collapsing temporal dimensions into invariant latent vectors.
+- **Dense Classifier**: Linear(256 &rarr; 128), BatchNorm, ReLU, Dropout(0.40), Linear(128 &rarr; 8 classes).
+- **Class-Weighted Loss**: Mitigates class imbalance (`Neutral` has 96 samples vs. 192 for other classes).
 
 ---
 
-### 2. Honest Discussion: What Does the Model Confuse and Why?
+## 📊 Evaluation & Honest Error Analysis
 
-Acoustic emotion space is organized along two psychological dimensions: **Arousal** (activation/energy) and **Valence** (positivity/negativity).
+### Performance on Unseen Speakers (Actors 21–24)
 
-```
-                 HIGH AROUSAL (Active)
-                         ▲
-                         │
-      Angry              │             Happy
-    (Negative)           │           (Positive)
-                         │
-  ◄──────────────────────┼──────────────────────►
-  NEGATIVE VALENCE       │       POSITIVE VALENCE
-                         │
-      Sad                │             Calm
-    (Negative)           │           (Positive)
-                         │
-                         ▼
-                 LOW AROUSAL (Subdued)
-```
+| Emotion | Precision | Recall | F1-Score | Acoustic Pattern |
+| :--- | :---: | :---: | :---: | :--- |
+| **Surprised** | **65.4%** | **53.1%** | **58.6%** | Sudden pitch spike, elevated fundamental frequency ($F_0$) |
+| **Fearful** | **52.4%** | **34.4%** | **41.5%** | Vocal jitter, breathiness, rapid pitch excursions |
+| **Disgust** | **47.8%** | **34.4%** | **40.0%** | Guttural resonance, low pitch, harsh spectral timbre |
+| **Angry** | **29.6%** | **50.0%** | **37.2%** | High RMS energy, sharp attack, broad spectral spread |
+| **Calm** | **31.1%** | **43.8%** | **36.4%** | Soft dynamics, slow tempo, relaxed vocal folds |
+| **Neutral** | **33.3%** | **37.5%** | **35.3%** | Stable pitch contours, baseline spectral profile |
+| **Happy** | **31.0%** | **40.6%** | **35.1%** | Elevated pitch, energetic harmonics, fast cadence |
+| **Sad** | **36.4%** | **12.5%** | **18.6%** | Low energy, extended pauses, muted harmonics |
 
-1. **High Arousal Confusion (Angry $\leftrightarrow$ Happy)**:
-   - **Angry** and **Happy** share virtually identical acoustic activation: elevated mean pitch ($F_0$), rapid speech rate, higher RMS volume, and abundant high-frequency energy.
-   - Without linguistic text (transcript) to indicate whether the excitement is joyful or aggressive, audio-only classifiers naturally confuse positive and negative high arousal.
-2. **Low Arousal Confusion (Sad $\leftrightarrow$ Neutral $\leftrightarrow$ Calm)**:
-   - **Sadness**, **Neutral**, and **Calm** share flat pitch contours, low energy, and slow tempo.
-   - Subtle sadness relies heavily on facial expressions; on acoustic signals alone, sadness is easily misclassified as everyday neutral speech.
-3. **Fear $\leftrightarrow$ Surprise**:
-   - Both exhibit abrupt pitch spikes, elevated voice jitter, and vocal breathiness.
+- **Overall Accuracy**: **38.33%** across 8 emotions on unseen test speakers (3&times; higher than the 12.5% random baseline).
+- **Macro Average F1**: **37.84%**
+
+### Acoustic Confusion Explanations
+1. **High Arousal Overlap (Angry &harr; Happy)**: Both emotions exhibit high energy, elevated pitch, and rapid cadence. Audio-only classifiers naturally encounter overlap between positive and negative high arousal.
+2. **Low Arousal Compression (Sad &harr; Calm &harr; Neutral)**: Subdued volume, slow speech tempo, and flat pitch contours make quiet sadness share acoustic properties with calm and neutral speech.
+3. **Vocal Jitter (Fear &harr; Surprise)**: Both display sudden pitch shifts and breathiness, leading to cross-class confusion.
 
 ---
 
-## 🌐 Interactive Web UI & GitHub Pages Deployment
+## 🔌 REST API Endpoints Specification
 
-The `web/` directory contains a standalone client-side web application built with **HTML5, CSS3, and JavaScript** using the **Web Audio API**:
-- **☕ Warm Brown & Roasted Espresso Palette**: Luxury editorial theme with instant **Dark Brown $\leftrightarrow$ Light Cream** mode switching and persistent `localStorage` memory.
-- **📱 Responsive Across All Devices**: Optimized layouts for mobile phones (touch targets $\ge 44\text{px}$, kinetic table scrolling), tablets, laptops, and ultra-wide desktops.
-- **🔴 Animated 3-Second Microphone Recorder**: Glowing pulse rings, live countdown timer (`3.0s` $\rightarrow$ `0.0s`), and real-time mic waveform visualization.
-- **🎛️ Full Player Controls**: Dedicated **Play (▶)**, **Pause (⏸)**, **Stop (⏹)**, and **Delete (🗑️)** buttons.
-- **📜 Recordings History Deck**: Automatically tracks and saves each voice clip with timestamp, detected emotion badge, and one-click replay/load.
-- **Unseen Actor Test Samples**: Listen to Male and Female audio clips of unseen test speakers (Actors 21–24) and see predictions in real time.
-- **Interactive 8×8 Confusion Matrix**: Hover and click on any cell to see acoustic confusion explanations.
+A production-grade **FastAPI** service is available in `src/api.py`.
 
-### Deploying to GitHub Pages in 3 Steps:
-1. Push this repository to GitHub:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit of Speech Emotion Recognition project"
-   git remote add origin https://github.com/<your-username>/emotion-recognition-speech.git
-   git branch -M main
-   git push -u origin main
-   ```
-2. In your GitHub repository, open **Settings** $\rightarrow$ **Pages**.
-3. Under **Build and deployment** $\rightarrow$ **Branch**, select `main` and folder `/web`, then click **Save**.
-4. Your interactive web demo will be live at `https://<your-username>.github.io/emotion-recognition-speech/`!
+### Running the API Server
 
----
-
-## 🚀 Quickstart: Reproduce Everything from Scratch
-
-### 1. Local Environment & Dependencies
 ```bash
-cd "emotion recognition speech"
+uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload
+```
+Interactive Swagger documentation is available at `http://localhost:8000/docs`.
+
+### API Endpoints Overview
+
+| Method | Endpoint | Description | Request Format | Response |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/health` | Check service health & model readiness | None | `{"status": "healthy", ...}` |
+| `GET` | `/emotions` | Retrieve taxonomy of supported emotion classes | None | List of emotions and arousal levels |
+| `GET` | `/metrics` | Retrieve evaluation metrics on unseen test speakers | None | Accuracy, macro F1, test split metadata |
+| `POST` | `/predict/audio` | Upload raw audio file (`.wav`, `.mp3`) for emotion inference | `multipart/form-data` | Prediction, confidence, probability distribution |
+| `POST` | `/predict/features` | Classify pre-extracted 280-D acoustic feature array | `application/json` | Prediction, confidence, probability distribution |
+
+---
+
+### API Usage Examples
+
+#### 1. Health Status Check
+```bash
+curl -X GET "http://localhost:8000/health"
+```
+**Response**:
+```json
+{
+  "status": "healthy",
+  "model_loaded": true,
+  "scaler_loaded": true,
+  "num_classes": 8,
+  "supported_emotions": [
+    "Neutral", "Calm", "Happy", "Sad",
+    "Angry", "Fearful", "Disgust", "Surprised"
+  ]
+}
+```
+
+#### 2. Classify an Audio File (`POST /predict/audio`)
+```bash
+curl -X POST "http://localhost:8000/predict/audio" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@web/samples/test_male_angry.wav"
+```
+**Response**:
+```json
+{
+  "predicted_emotion": "Angry",
+  "confidence": 0.7420,
+  "arousal_level": "High Arousal",
+  "probabilities": {
+    "Neutral": 0.0310,
+    "Calm": 0.0120,
+    "Happy": 0.1250,
+    "Sad": 0.0210,
+    "Angry": 0.7420,
+    "Fearful": 0.0410,
+    "Disgust": 0.0180,
+    "Surprised": 0.0100
+  },
+  "speaker_independent_guarantee": "Model evaluated strictly on unseen benchmark speakers (Actors 21-24)."
+}
+```
+
+#### 3. Classify Pre-Extracted Features (`POST /predict/features`)
+```bash
+curl -X POST "http://localhost:8000/predict/features" \
+     -H "Content-Type: application/json" \
+     -d '{"features": [0.12, -0.45, 1.28, ...]}'
+```
+
+---
+
+## 💻 Interactive Web Application
+
+The `web/` directory provides a client-side web application built with **HTML5, CSS3, JavaScript**, and the **Web Audio API**:
+
+- **Warm Brown & Espresso Palette**: Editorial theme with Dark $\leftrightarrow$ Light mode switching and persistent storage.
+- **Cross-Browser SVG Icons**: Uses native inline SVGs with zero missing font glyphs (`□`).
+- **Real-Time 3-Second Microphone Recorder**: Includes pulse animations, countdown feedback (`3.0s` &rarr; `0.0s`), and live audio waveforms.
+- **Playback Controls**: Dedicated **Play**, **Pause**, **Stop**, and **Delete** actions.
+- **Recordings History Deck**: Stores audio recordings with timestamps, duration, and emotion predictions.
+- **Client-Side ONNX Inference**: Runs inference directly in the browser via `models/emotion_cnn1d.onnx`.
+
+### Running Locally
+
+```bash
+python scripts/serve_web.py
+```
+Open `http://localhost:8000` in your browser.
+
+---
+
+## 🛠️ Quickstart: Reproducing Results
+
+### 1. Environment Setup
+```bash
+git clone https://github.com/<your-username>/speech-emotion-recognition.git
+cd speech-emotion-recognition
 pip install -r requirements.txt
 ```
 
-### 2. Download RAVDESS Dataset (~214 MB)
+### 2. Download Dataset & Extract Features
 ```bash
 python scripts/download_ravdess.py
-```
-
-### 3. Extract Features & Split by Speaker
-```bash
 python -m src.preprocess
 ```
 
-### 4. Train Deep CNN Model
+### 3. Train Model
 ```bash
 python -m src.train --model cnn1d --epochs 60 --batch-size 32
 ```
 
-### 5. Generate Evaluation Report & Figures
+### 4. Evaluate on Unseen Speakers
 ```bash
 python -m src.evaluate
 ```
 
-### 6. Generate 1-Minute LinkedIn Showcase Video (1080p with Female Voice & Burned Subtitles)
+### 5. Run Unit Tests
 ```bash
-python scripts/generate_video.py
+python -m unittest discover -s tests -v
 ```
-Outputs high-definition video [`video/emotion_recognition_linkedin_1min.mp4`](video/emotion_recognition_linkedin_1min.mp4) along with ready-to-post LinkedIn text in [`video/LINKEDIN_POST.md`](video/LINKEDIN_POST.md).
 
 ---
 
 ## 📁 Repository Structure
 
 ```text
-emotion-recognition-speech/
+speech-emotion-recognition/
+├── .github/workflows/deploy.yml   # Automatic GitHub Pages deployment workflow
 ├── data/
-│   ├── raw/                 # Extracted RAVDESS audio (Actors 01 to 24)
-│   └── processed/           # Cached features (.npz) and metadata splits
+│   ├── raw/                       # Audio files partitioned by Actor ID (git-ignored)
+│   └── processed/                 # Cached feature arrays (.npz) and metadata splits
 ├── models/
-│   ├── best_cnn1d.pt        # Saved PyTorch checkpoint with highest Val F1
-│   └── emotion_cnn1d.onnx   # Production ONNX model export
-├── notebooks/
-│   ├── 01_EDA_and_Audio_Visualization.ipynb  # Interactive EDA & feature spectrograms
-│   └── visualize_audio_features.py           # Feature analysis & plot generator
+│   ├── best_cnn1d.pt              # Saved PyTorch model checkpoint
+│   └── emotion_cnn1d.onnx         # ONNX model export for browser/edge inference
 ├── reports/
-│   ├── per_class_metrics.csv # Precision, Recall, F1, Support table
+│   ├── per_class_metrics.csv      # Precision, recall, F1, support data
 │   ├── per_class_metrics.json
-│   ├── confusion_matrix.png # High-resolution confusion matrix heatmap
-│   └── ERROR_ANALYSIS.md    # Detailed acoustic discussion of failure modes
+│   ├── figures/                   # High-resolution charts and application figures
+│   │   ├── live_recording_session.png
+│   │   ├── live_prediction_history.png
+│   │   ├── mel_spectrograms_comparison.png
+│   │   └── confusion_matrix_large.png
+│   └── ERROR_ANALYSIS.md          # Technical acoustic analysis
 ├── scripts/
-│   ├── download_ravdess.py  # Automated RAVDESS downloader & validator
-│   ├── generate_video.py    # 1080p video synthesizer with Edge-TTS voiceover & subtitles
-│   └── serve_web.py         # Local development server for web UI
+│   ├── download_ravdess.py        # Automated dataset downloader
+│   ├── generate_video.py          # 1080p demonstration video synthesizer
+│   └── serve_web.py               # Local static web server
 ├── src/
-│   ├── dataset.py           # Speaker-independent partitioning (Actors 21-24 test)
-│   ├── features.py          # 280-D MFCC, Delta, Chroma, Contrast, RMS extraction
-│   ├── model.py             # 1D CNN & CRNN architectures in PyTorch
-│   ├── preprocess.py        # Feature extraction pipeline & test sample bundler
-│   ├── train.py             # Training loop with class-weighted CrossEntropy
-│   └── evaluate.py          # Classification report & confusion matrix generator
+│   ├── api.py                     # FastAPI REST API service
+│   ├── dataset.py                 # Speaker-independent dataset partitioning
+│   ├── features.py                # 280-D acoustic feature extraction
+│   ├── model.py                   # PyTorch 1D CNN & CRNN architectures
+│   ├── preprocess.py              # Feature processing pipeline
+│   ├── train.py                   # Training loop with class-weighted loss
+│   └── evaluate.py                # Evaluation report & confusion matrix generator
 ├── tests/
-│   └── test_pipeline.py     # 4/4 passing unit tests verifying zero data leakage
+│   └── test_pipeline.py           # 4/4 passing unit tests (zero leakage, shapes)
 ├── video/
-│   ├── emotion_recognition_linkedin_1min.mp4  # 1-min 1080p LinkedIn showcase video
-│   ├── LINKEDIN_POST.md                       # Ready-to-copy LinkedIn caption
-│   └── subtitles.srt                          # Synchronized subtitle captions
-├── web/                     # GitHub Pages static site (Espresso & Cashmere Theme)
-│   ├── index.html           # Modern responsive layout (mobile, tablet, laptop)
-│   ├── style.css            # Light & Dark warm brown theme
-│   ├── app.js               # Audio playback, 3s recording, waveform visualizer, history
-│   ├── emotion_cnn1d.onnx   # Browser-ready ONNX model
-│   ├── metrics.json         # Live per-class scores
-│   ├── confusion_matrix.json
-│   └── samples/             # Bundled audio test clips from unseen test actors
-├── requirements.txt         # Pinned Python dependencies
-└── README.md                # Project documentation
+│   ├── emotion_recognition_linkedin_1min.mp4  # 1080p HD demo video
+│   ├── LINKEDIN_POST.md           # Accompanying LinkedIn post draft
+│   └── subtitles.srt              # Synchronized captions
+├── web/                           # Standalone Web Application
+│   ├── index.html                 # Responsive interface layout
+│   ├── style.css                  # Light/Dark warm brown design
+│   ├── app.js                     # Audio capture, playback, and history logic
+│   └── emotion_cnn1d.onnx         # In-browser model asset
+├── requirements.txt               # Pinned Python package dependencies
+├── LICENSE                        # MIT License
+└── README.md                      # Project documentation
 ```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
