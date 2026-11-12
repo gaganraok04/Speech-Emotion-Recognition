@@ -236,6 +236,96 @@ h1.hero-title {
   line-height: 1.6;
 }
 
+/* Hero Actions & GitHub CTA Buttons */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.6rem auto 0;
+  flex-wrap: wrap;
+}
+
+.btn-hero-github {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1.5px solid var(--border-color);
+  padding: 0.85rem 1.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.btn-hero-github:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-card-hover);
+  color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.btn-hero-github .ext-arrow {
+  color: var(--text-dim);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-hero-github:hover .ext-arrow {
+  color: var(--accent-primary);
+  transform: translate(2px, -2px);
+}
+
+.btn-hero-demo {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #ffffff !important;
+  border: 1.5px solid transparent;
+  padding: 0.85rem 1.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: var(--transition);
+}
+
+.btn-hero-demo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px var(--accent-glow);
+  filter: brightness(1.08);
+}
+
+/* Navbar GitHub Repo Button */
+.nav-btn-github {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.48rem 0.95rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  touch-action: manipulation;
+}
+
+.nav-btn-github:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-card-hover);
+  color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
 /* Metrics Banner Grid */
 .metrics-banner {
   display: grid;
@@ -973,25 +1063,166 @@ footer a {
   text-decoration: none;
 }
 
-@media (max-width: 640px) {
+/* ==========================================================================
+   Comprehensive Responsive System (Mobile, Tablet, Laptop, Desktop)
+   ========================================================================== */
+
+/* Laptops & Desktops (1024px and up) */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1240px;
+    padding: 0 2rem;
+  }
+  .layout-2col {
+    grid-template-columns: 1.18fr 0.82fr;
+    gap: 1.85rem;
+  }
+}
+
+/* Tablets & Small Laptops (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    padding: 0 1.5rem;
+  }
   .hero-title {
-    font-size: 1.85rem;
+    font-size: 2.6rem;
+  }
+  .metrics-banner {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+  }
+  .metric-card {
+    padding: 1rem 0.75rem;
+  }
+  .metric-num {
+    font-size: 1.95rem;
+  }
+  .layout-2col {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .controls-toolbar {
+    gap: 0.65rem;
+  }
+}
+
+/* Mobile Devices & Small Tablets (< 768px) */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0.65rem 0;
+  }
+  .brand-logo {
+    font-size: 1.05rem;
+  }
+  .brand-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .hero {
+    padding: 2rem 0 1.5rem;
+  }
+  .hero-title {
+    font-size: clamp(1.75rem, 6.5vw, 2.3rem);
+  }
+  .hero-subtitle {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin-bottom: 1.25rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 340px;
+    margin: 1.25rem auto 0;
+    gap: 0.75rem;
+  }
+  .btn-hero-github,
+  .btn-hero-demo {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.92rem;
   }
   .metrics-banner {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.65rem;
+    margin-bottom: 1.5rem;
   }
   .metric-card {
-    padding: 0.85rem 0.5rem;
+    padding: 0.9rem 0.6rem;
   }
   .metric-num {
-    font-size: 1.6rem;
+    font-size: 1.65rem;
+  }
+  .metric-label {
+    font-size: 0.72rem;
+  }
+  .layout-2col {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
   .card {
     padding: 1.15rem;
+    border-radius: var(--radius-md);
   }
-  .btn {
-    padding: 0.75rem 0.9rem;
+  .action-row {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .action-row .btn {
+    width: 100%;
+  }
+  .controls-toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.55rem;
+  }
+  .controls-toolbar .btn {
+    width: 100%;
+    padding: 0.75rem 0.5rem;
     font-size: 0.86rem;
+  }
+  .active-track-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .track-badges-row {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .data-table th, .data-table td {
+    padding: 0.6rem 0.65rem;
+    font-size: 0.82rem;
+  }
+  .cm-grid th, .cm-grid td {
+    padding: 0.25rem;
+  }
+  .cm-cell {
+    width: 38px;
+    height: 38px;
+    font-size: 0.68rem;
+  }
+}
+
+/* Extra Small Phones (< 420px) */
+@media (max-width: 420px) {
+  .nav-github-label {
+    display: none;
+  }
+  .nav-btn-github {
+    padding: 0.45rem 0.65rem;
+  }
+  #theme-text {
+    display: none;
+  }
+  .theme-toggle-btn {
+    padding: 0.45rem 0.65rem;
+  }
+  .metric-num {
+    font-size: 1.45rem;
+  }
+  .metric-label {
+    font-size: 0.68rem;
   }
 }
