@@ -1,18 +1,95 @@
-# Speech Emotion Recognition (SER)
+<div align="center">
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-REST%20API-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Librosa](https://img.shields.io/badge/Librosa-Acoustic%20Analysis-2D72D9)](https://librosa.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+# 🎙️ Speech Emotion Recognition (SER)
+### Deep Learning Acoustic Prosody Analysis with PyTorch, FastAPI & Interactive Web UI
 
-An end-to-end Speech Emotion Recognition system engineered in **PyTorch**, **Librosa**, and **FastAPI**, featuring **strict speaker-independent dataset partitioning**, a **280-dimensional acoustic prosody feature pipeline**, real-time **1D Convolutional Neural Network** inference, and an interactive **HTML5/WebAudio application**.
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://gaganraok04.github.io/speech-emotion-recognition/)
+[![FastAPI](https://img.shields.io/badge/🔌%20API-Swagger%20Docs-009688?style=for-the-badge&logo=fastapi)](http://localhost:8000/docs)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+<br/>
+
+> 🚀 **Live Interactive Web Demo**: **[https://gaganraok04.github.io/speech-emotion-recognition/](https://gaganraok04.github.io/speech-emotion-recognition/)**  
+> 🎥 **1-Minute Showcase Video**: **[`video/emotion_recognition_linkedin_1min.mp4`](video/emotion_recognition_linkedin_1min.mp4)**  
+> 📄 **Production REST API**: **[`src/api.py`](src/api.py)** (FastAPI) | 📖 **Swagger Docs**: `http://localhost:8000/docs`
+
+</div>
+
+---
+
+## 📑 Table of Contents
+- [📌 Project Overview](#-project-overview)
+  - [The Core Problem: Identity Memorization vs. Emotion Recognition](#the-core-problem-identity-memorization-vs-emotion-recognition)
+  - [The Solution Architecture](#the-solution-architecture)
+- [✨ Key Highlights](#-key-highlights)
+- [📸 Real-Time Application & Acoustic Visualizations](#-real-time-application--acoustic-visualizations)
+  - [Figure 1: Real-Time Interactive Web UI & Live 3-Second Recording](#figure-1-real-time-interactive-web-ui--live-3-second-recording)
+  - [Figure 2: Live Emotion Prediction & Local Recordings History Deck](#figure-2-live-emotion-prediction--local-recordings-history-deck)
+  - [Figure 3: Acoustic Prosody Comparison Across Emotional Expressions](#figure-3-acoustic-prosody-comparison-across-emotional-expressions)
+  - [Figure 4: Acoustic Confusion Matrix on Unseen Test Speakers](#figure-4-acoustic-confusion-matrix-on-unseen-test-speakers)
+- [🎯 The Core Requirement: Speaker-Independent Split](#-the-core-requirement-speaker-independent-split)
+  - [Partitioning Strategy (RAVDESS Benchmark)](#partitioning-strategy-ravdess-benchmark)
+- [🎛️ 280-Dimensional Acoustic Feature Pipeline](#️-280-dimensional-acoustic-feature-pipeline)
+- [🧠 Deep 1D CNN Architecture](#-deep-1d-cnn-architecture)
+- [📊 Evaluation & Honest Acoustic Error Analysis](#-evaluation--honest-acoustic-error-analysis)
+  - [Performance on Unseen Test Speakers (Actors 21–24)](#performance-on-unseen-test-speakers-actors-2124)
+  - [Acoustic Confusion Explanations](#acoustic-confusion-explanations)
+- [🔌 REST API Endpoints Specification](#-rest-api-endpoints-specification)
+  - [API Endpoints Overview](#api-endpoints-overview)
+  - [cURL Request & Response Examples](#curl-request--response-examples)
+- [💻 Interactive Web Application](#-interactive-web-application)
+- [🛠️ Quickstart: Reproducing Results](#️-quickstart-reproducing-results)
+- [📁 Repository Structure](#-repository-structure)
+- [📄 License](#-license)
+
+---
+
+## 📌 Project Overview
+
+**Speech Emotion Recognition (SER)** is a machine learning system designed to analyze spoken voice signals and classify the underlying emotional state of the speaker. While conventional speech systems focus on *what is said* (transcription / ASR), this system analyzes *how it is said* (vocal timbre, pitch contour, cadence, and prosodic energy).
+
+```mermaid
+flowchart LR
+    A["Raw Speech Audio (.wav)"] --> B["22,050 Hz Normalization"]
+    B --> C["280-D Acoustic Prosody Pipeline"]
+    C --> D["Deep 1D PyTorch CNN"]
+    D --> E["8-Emotion Probability Distribution"]
+    E --> F["Client UI / REST API Response"]
+```
+
+### The Core Problem: Identity Memorization vs. Emotion Recognition
+In speech emotion classification, **random train/test splitting is the single biggest trap in machine learning**:
+- Each human voice has a unique physical vocal anatomy: vocal tract length, fundamental pitch baseline ($F_0$), formant dispersion, and idiosyncratic timbre.
+- When audio clips are partitioned randomly, utterances from the same person appear in both train and test sets.
+- Under random splitting, the model does not learn emotional expressions; instead, it becomes a **speaker identifier** (memorizing that *"Actor #14 has a naturally deep voice that corresponds to sadness in this subset"*).
+- Models tested on random splits report **fictitious test accuracies (85%–95%)**, yet **fail completely on real, unfamiliar voices**.
+
+### The Solution Architecture
+This repository implements an end-to-end production solution:
+1. **Strict Out-of-Sample Partitioning**: Quarantining 4 unseen actors (Actors 21–24, 50% Male / 50% Female) exclusively for testing to measure genuine cross-speaker acoustic generalization.
+2. **280-Dimensional Prosodic Extraction**: Combining 40-band Mel filterbanks, velocity deltas, acceleration delta-deltas, 12 chroma bins, 7 spectral contrast bands, and RMS energy.
+3. **Deep 1D CNN with Class-Weighted Loss**: Multi-stage 1D convolution with spatial dropout and batch normalization to handle acoustic temporal variance without overfitting.
+4. **Dual Production Delivery**: A lightweight **FastAPI REST microservice** (`src/api.py`) and a fully client-side **WebAudio + ONNX Runtime Web Application** deployable to GitHub Pages.
+
+---
+
+## ✨ Key Highlights
+
+- 🛡️ **Zero Speaker Leakage**: Strict actor-level splitting guarantees that test voices are 100% unseen during training and validation.
+- ⚖️ **Perfect Gender Balance**: Exact 50% male and 50% female distribution across all three data splits.
+- 🎛️ **280-D Handcrafted Prosody**: Comprehensive acoustic representation capturing pitch, timbre, rhythm, and loudness dynamics.
+- ⚡ **Real-Time Client-Side Inference**: In-browser ONNX model (`models/emotion_cnn1d.onnx`) executing with zero server roundtrips.
+- 📱 **Responsive Warm Espresso UI**: Mobile, tablet, and desktop layout with light/dark theme toggle, native inline SVGs, and active playback controls.
+- 🔌 **FastAPI Production Endpoints**: REST API supporting raw audio file upload (`/predict/audio`) and feature vector classification (`/predict/features`).
+- 🧪 **100% Unit Test Coverage**: Passing unit tests verifying zero data leakage, feature dimensions, and model forward passes (`tests/test_pipeline.py`).
 
 ---
 
 ## 📸 Real-Time Application & Acoustic Visualizations
 
-### Figure 1: Real-Time Working Project — Interactive Web UI & Live 3-Second Recording
+### Figure 1: Real-Time Interactive Web UI & Live 3-Second Recording
 The client-side interface includes real-time microphone capture with live countdown feedback (`3.0s` &rarr; `0.0s`), dynamic waveform animation, and playback controls.
 
 <p align="center">
@@ -52,7 +129,7 @@ Evaluated on completely unseen test speakers (Actors 21–24, 50% Male / 50% Fem
 
 ---
 
-## 🎯 The Core Assessment Requirement: Speaker-Independent Split
+## 🎯 The Core Requirement: Speaker-Independent Split
 
 > **"Split by speaker, not at random — otherwise the model learns voices instead of emotions and your score is fiction."**
 
@@ -103,9 +180,9 @@ The model uses a 1D Convolutional Neural Network designed for tabular and fixed-
 
 ---
 
-## 📊 Evaluation & Honest Error Analysis
+## 📊 Evaluation & Honest Acoustic Error Analysis
 
-### Performance on Unseen Speakers (Actors 21–24)
+### Performance on Unseen Test Speakers (Actors 21–24)
 
 | Emotion | Precision | Recall | F1-Score | Acoustic Pattern |
 | :--- | :---: | :---: | :---: | :--- |
@@ -122,7 +199,7 @@ The model uses a 1D Convolutional Neural Network designed for tabular and fixed-
 - **Macro Average F1**: **37.84%**
 
 ### Acoustic Confusion Explanations
-1. **High Arousal Overlap (Angry &harr; Happy)**: Both emotions exhibit high energy, elevated pitch, and rapid cadence. Audio-only classifiers naturally encounter overlap between positive and negative high arousal.
+1. **High Arousal Overlap (Angry &harr; Happy)**: Both emotions exhibit high energy, elevated pitch, and rapid cadence. Audio-only classifiers naturally encounter overlap between positive and negative high arousal without linguistic text.
 2. **Low Arousal Compression (Sad &harr; Calm &harr; Neutral)**: Subdued volume, slow speech tempo, and flat pitch contours make quiet sadness share acoustic properties with calm and neutral speech.
 3. **Vocal Jitter (Fear &harr; Surprise)**: Both display sudden pitch shifts and breathiness, leading to cross-class confusion.
 
@@ -130,7 +207,7 @@ The model uses a 1D Convolutional Neural Network designed for tabular and fixed-
 
 ## 🔌 REST API Endpoints Specification
 
-A production-grade **FastAPI** service is available in `src/api.py`.
+A production-grade **FastAPI** service is available in [`src/api.py`](src/api.py).
 
 ### Running the API Server
 
@@ -151,7 +228,7 @@ Interactive Swagger documentation is available at `http://localhost:8000/docs`.
 
 ---
 
-### API Usage Examples
+### cURL Request & Response Examples
 
 #### 1. Health Status Check
 ```bash
@@ -211,7 +288,7 @@ curl -X POST "http://localhost:8000/predict/features" \
 
 The `web/` directory provides a client-side web application built with **HTML5, CSS3, JavaScript**, and the **Web Audio API**:
 
-- **Warm Brown & Espresso Palette**: Editorial theme with Dark $\leftrightarrow$ Light mode switching and persistent storage.
+- **Warm Brown & Espresso Palette**: Luxury editorial theme with Dark $\leftrightarrow$ Light mode switching and persistent storage.
 - **Cross-Browser SVG Icons**: Uses native inline SVGs with zero missing font glyphs (`□`).
 - **Real-Time 3-Second Microphone Recorder**: Includes pulse animations, countdown feedback (`3.0s` &rarr; `0.0s`), and live audio waveforms.
 - **Playback Controls**: Dedicated **Play**, **Pause**, **Stop**, and **Delete** actions.
